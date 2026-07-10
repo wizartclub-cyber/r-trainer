@@ -1,6 +1,6 @@
 // Cache-first app shell + opportunistic runtime caching (fonts, etc.).
 // Bump CACHE on any release to invalidate old assets.
-const CACHE = 'r-trainer-v2';
+const CACHE = 'r-trainer-v3';
 const SHELL = ['.', 'index.html', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {

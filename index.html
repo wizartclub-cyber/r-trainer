@@ -219,8 +219,8 @@ const I18N = {
     notesPlaceholder:'Нотатки: що вдалося, що ні, скільки хвилин…',
     saved:'Збережено', saveErr:'Не вдалося зберегти — спробуйте ще раз', dateSaved:'Дату збережено',
     exportBtn:'Експорт', importBtn:'Імпорт', imported:'Прогрес завантажено', importErr:'Не вдалося прочитати файл',
-    recTitle:'Запис голосу', recStart:'🎙 Записати', recStop:'⏹ Стоп', recAgain:'🎙 Ще раз', recDownload:'⬇ Завантажити',
-    recHint:'Запис живе лише зараз — завантажте файл, щоб зберегти чи надіслати логопеду.', micDenied:'Немає доступу до мікрофона.',
+    recTitle:'Запис голосу', recStart:'🎙 Записати', recStop:'⏹ Стоп', recAgain:'🎙 Ще раз', recDownload:'⬇ Завантажити', recDelete:'🗑 Видалити',
+    recHint:'Останній запис зберігається для цього дня на цьому пристрої. Завантажте файл, щоб надіслати логопеду.', micDenied:'Немає доступу до мікрофона.',
     markDone:'Позначте галочкою, коли виконано.', checkAria:'Позначити виконаним',
     plus1:'+1', reset:'Скинути', start:'Старт', stop:'Стоп', setsWord:'підходів',
     statDone:'днів виконано', statVib:'днів з вібрацією', statStreak:'поспіль зараз',
@@ -269,8 +269,8 @@ const I18N = {
     notesPlaceholder:'Poznámky: čo sa podarilo, čo nie, koľko minút…',
     saved:'Uložené', saveErr:'Nepodarilo sa uložiť — skúste znova', dateSaved:'Dátum uložený',
     exportBtn:'Export', importBtn:'Import', imported:'Pokrok načítaný', importErr:'Súbor sa nepodarilo načítať',
-    recTitle:'Nahrávka hlasu', recStart:'🎙 Nahrať', recStop:'⏹ Stop', recAgain:'🎙 Znova', recDownload:'⬇ Stiahnuť',
-    recHint:'Nahrávka existuje len teraz — stiahnite súbor, ak ju chcete uložiť alebo poslať logopédovi.', micDenied:'Niet prístupu k mikrofónu.',
+    recTitle:'Nahrávka hlasu', recStart:'🎙 Nahrať', recStop:'⏹ Stop', recAgain:'🎙 Znova', recDownload:'⬇ Stiahnuť', recDelete:'🗑 Zmazať',
+    recHint:'Posledná nahrávka sa uloží pre tento deň v tomto zariadení. Stiahnite súbor, ak ho chcete poslať logopédovi.', micDenied:'Niet prístupu k mikrofónu.',
     markDone:'Označte fajkou, keď je hotové.', checkAria:'Označiť ako hotové',
     plus1:'+1', reset:'Vynulovať', start:'Štart', stop:'Stop', setsWord:'sérií',
     statDone:'dní hotových', statVib:'dní s vibráciou', statStreak:'v rade teraz',
@@ -319,8 +319,8 @@ const I18N = {
     notesPlaceholder:'Notes: what worked, what didn’t, how many minutes…',
     saved:'Saved', saveErr:'Could not save — please try again', dateSaved:'Date saved',
     exportBtn:'Export', importBtn:'Import', imported:'Progress loaded', importErr:'Could not read the file',
-    recTitle:'Voice recording', recStart:'🎙 Record', recStop:'⏹ Stop', recAgain:'🎙 Again', recDownload:'⬇ Download',
-    recHint:'The recording lives only now — download the file to keep it or send it to a therapist.', micDenied:'No microphone access.',
+    recTitle:'Voice recording', recStart:'🎙 Record', recStop:'⏹ Stop', recAgain:'🎙 Again', recDownload:'⬇ Download', recDelete:'🗑 Delete',
+    recHint:'The latest take is saved for this day on this device. Download the file to send it to a therapist.', micDenied:'No microphone access.',
     markDone:'Tick the box when done.', checkAria:'Mark as done',
     plus1:'+1', reset:'Reset', start:'Start', stop:'Stop', setsWord:'sets',
     statDone:'days done', statVib:'days with vibration', statStreak:'current streak',
@@ -596,9 +596,9 @@ function saveNotes(){
   persist();
 }
 function shiftDay(d){
-  stopAllTimers(); resetRec();
+  stopAllTimers();
   curDay=Math.min(56, Math.max(1, curDay+d));
-  renderToday();
+  renderToday(); loadDayRec();
 }
 
 // ---------- rendering: progress ----------
@@ -643,10 +643,25 @@ function renderProgress(){
   }
 }
 
-// ---------- voice recording (session-only; download to keep) ----------
-// ponytail: recordings live in memory, not persisted. Upgrade path: IndexedDB per day.
-let rec = { mr:null, chunks:[], stream:null, url:null, blob:null, iv:null, secs:0 };
+// ---------- voice recording (latest take persisted per day in IndexedDB) ----------
+let rec = { mr:null, chunks:[], stream:null, url:null, blob:null, iv:null, secs:0, day:0 };
 const REC_MAX = 30; // ponytail: cap seconds so a blob can't grow unbounded
+
+// tiny IndexedDB wrapper: one store, blob keyed by day number. No IDB → calls reject, handled.
+let _db=null;
+function idb(){
+  if(_db) return Promise.resolve(_db);
+  return new Promise((res,rej)=>{
+    if(!window.indexedDB) return rej(new Error('no idb'));
+    const r=indexedDB.open('rtrainer',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('rec');
+    r.onsuccess=()=>{ _db=r.result; res(_db); };
+    r.onerror=()=>rej(r.error);
+  });
+}
+function idbPut(k,v){ return idb().then(db=>new Promise((res,rej)=>{ const t=db.transaction('rec','readwrite'); t.objectStore('rec').put(v,k); t.oncomplete=res; t.onerror=()=>rej(t.error); })); }
+function idbGet(k){ return idb().then(db=>new Promise((res,rej)=>{ const t=db.transaction('rec','readonly'); const q=t.objectStore('rec').get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); })); }
+function idbDel(k){ return idb().then(db=>new Promise((res,rej)=>{ const t=db.transaction('rec','readwrite'); t.objectStore('rec').delete(k); t.oncomplete=res; t.onerror=()=>rej(t.error); })); }
 
 async function toggleRec(){
   if(rec.mr && rec.mr.state==='recording'){ stopRec(); return; }
@@ -654,19 +669,21 @@ async function toggleRec(){
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
     document.getElementById('recStatus').textContent='';
-    rec.stream=stream; rec.chunks=[];
+    rec.stream=stream; rec.chunks=[]; rec.day=curDay;
     const mr=new MediaRecorder(stream); rec.mr=mr;
     mr.ondataavailable=e=>{ if(e.data && e.data.size) rec.chunks.push(e.data); };
     mr.onstop=()=>{
       clearInterval(rec.iv);
       stream.getTracks().forEach(tr=>tr.stop());
+      const blob=new Blob(rec.chunks, {type: mr.mimeType||'audio/webm'});
+      const day=rec.day;
       if(rec.url) URL.revokeObjectURL(rec.url);
-      rec.blob=new Blob(rec.chunks, {type: mr.mimeType||'audio/webm'});
-      rec.url=URL.createObjectURL(rec.blob);
+      rec.blob=blob; rec.url=URL.createObjectURL(blob);
+      rec.mr=null; rec.stream=null; rec.chunks=[];
       renderRec();
+      idbPut(day, blob).then(()=>flashSave(L().saved)).catch(()=>{});
     };
-    mr.start();
-    rec.secs=0;
+    mr.start(); rec.secs=0;
     rec.iv=setInterval(()=>{ rec.secs++; if(rec.secs>=REC_MAX) stopRec(); else updateRecTime(); }, 1000);
     renderRec();
   }catch(e){ document.getElementById('recStatus').textContent=L().micDenied; }
@@ -674,6 +691,29 @@ async function toggleRec(){
 function stopRec(){ if(rec.mr && rec.mr.state==='recording') rec.mr.stop(); }
 function updateRecTime(){ const c=document.querySelector('#recBox .rectime'); if(c) c.textContent=rec.secs+'s'; }
 function recExt(blob){ const m=(blob&&blob.type)||''; if(m.includes('mp4')||m.includes('mpeg'))return 'm4a'; if(m.includes('ogg'))return 'ogg'; return 'webm'; }
+
+function abortLive(){ // stop capture WITHOUT saving (drop handler first, then stop)
+  if(rec.mr){ rec.mr.onstop=null; if(rec.mr.state==='recording'){ try{rec.mr.stop()}catch(e){} } }
+  if(rec.stream) rec.stream.getTracks().forEach(tr=>tr.stop());
+  clearInterval(rec.iv);
+  rec.mr=null; rec.stream=null; rec.chunks=[]; rec.iv=null; rec.secs=0;
+}
+function clearRecUI(){
+  abortLive();
+  if(rec.url) URL.revokeObjectURL(rec.url);
+  rec.url=null; rec.blob=null;
+  const st=document.getElementById('recStatus'); if(st) st.textContent='';
+}
+async function loadDayRec(){ // teardown, then load this day's saved take (if any)
+  clearRecUI();
+  try{ const blob=await idbGet(curDay); if(blob){ rec.blob=blob; rec.url=URL.createObjectURL(blob); } }catch(e){}
+  renderRec();
+}
+async function deleteRec(){
+  clearRecUI();
+  try{ await idbDel(curDay); }catch(e){}
+  renderRec();
+}
 function renderRec(){
   const t=L(), box=document.getElementById('recBox');
   if(!box) return;
@@ -684,20 +724,12 @@ function renderRec(){
   } else if(rec.url){
     box.innerHTML=`<div class="recrow">
       <audio controls src="${rec.url}"></audio>
-      <a class="bigbtn ghost" href="${rec.url}" download="r-attempt.${recExt(rec.blob)}">${t.recDownload}</a>
-      <button class="bigbtn ghost" onclick="toggleRec()">${t.recAgain}</button></div>`;
+      <a class="bigbtn ghost" href="${rec.url}" download="r-day${curDay}.${recExt(rec.blob)}">${t.recDownload}</a>
+      <button class="bigbtn ghost" onclick="toggleRec()">${t.recAgain}</button>
+      <button class="bigbtn ghost" onclick="deleteRec()">${t.recDelete}</button></div>`;
   } else {
     box.innerHTML=`<div class="recrow"><button class="bigbtn acc" onclick="toggleRec()">${t.recStart}</button></div>`;
   }
-}
-function resetRec(){
-  stopRec();
-  if(rec.stream) rec.stream.getTracks().forEach(tr=>tr.stop());
-  clearInterval(rec.iv);
-  if(rec.url) URL.revokeObjectURL(rec.url);
-  rec={ mr:null, chunks:[], stream:null, url:null, blob:null, iv:null, secs:0 };
-  const st=document.getElementById('recStatus'); if(st) st.textContent='';
-  renderRec();
 }
 
 // ---------- export / import (backup, share with a therapist) ----------
@@ -732,12 +764,12 @@ function importData(input){
 
 // ---------- views ----------
 function setView(v){
-  stopAllTimers(); resetRec();
+  stopAllTimers();
   document.getElementById('viewToday').classList.toggle('hidden', v!=='today');
   document.getElementById('viewProgress').classList.toggle('hidden', v!=='progress');
   document.getElementById('tabToday').classList.toggle('active', v==='today');
   document.getElementById('tabProg').classList.toggle('active', v==='progress');
-  if(v==='today') renderToday(); else renderProgress();
+  if(v==='today'){ renderToday(); loadDayRec(); } else { clearRecUI(); renderProgress(); }
 }
 
 // ---------- init ----------
@@ -749,6 +781,7 @@ function setView(v){
   inp.onchange=()=>{ state.start=inp.value||todayISO(); persist(L().dateSaved); renderToday(); };
   curDay=Math.min(56, Math.max(1, todayDayNum()));
   renderToday();
+  loadDayRec();
 })();
 
 // PWA: installable + offline. Registration failure (file://, no SW support) is harmless.
