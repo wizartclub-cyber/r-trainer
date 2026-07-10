@@ -73,7 +73,7 @@ header{display:flex; align-items:center; justify-content:space-between; gap:10px
 .running .ripple{animation:rip 1.2s ease-out infinite}
 .running .ripple.r2{animation-delay:.6s}
 @keyframes rip{0%{transform:scale(.85); opacity:.55}100%{transform:scale(1.28); opacity:0}}
-@media (prefers-reduced-motion: reduce){.ripple{animation:none !important}}
+@media (prefers-reduced-motion: reduce){.ripple, .recdot{animation:none !important}}
 
 /* session log */
 .log h3{font-family:var(--disp); font-weight:700; font-size:15px; margin-bottom:10px}
@@ -84,6 +84,13 @@ header{display:flex; align-items:center; justify-content:space-between; gap:10px
 .vib.sel-no{background:var(--ink); border-color:var(--ink); color:#fff}
 textarea{width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-family:var(--body); font-size:15px; margin-top:10px; resize:vertical; min-height:64px; background:#fff; color:var(--ink)}
 .savemsg{font-size:13px; color:var(--green); font-weight:600; margin-top:8px; min-height:18px}
+.rec{margin-top:16px; padding-top:14px; border-top:1px solid var(--line)}
+.rec h4{font-family:var(--disp); font-weight:700; font-size:14px; margin-bottom:8px}
+.recrow{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.recrow audio{max-width:100%; height:38px}
+.recdot{width:12px; height:12px; border-radius:50%; background:var(--accent); flex:none; animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+a.bigbtn{text-decoration:none; display:inline-block}
 
 /* progress */
 .stats{display:flex; gap:10px; margin-bottom:12px}
@@ -167,6 +174,12 @@ textarea{width:100%; border:1px solid var(--line); border-radius:12px; padding:1
       </div>
       <textarea id="notes" placeholder="Нотатки…" onblur="saveNotes()"></textarea>
       <div class="savemsg" id="saveMsg"></div>
+      <div class="rec">
+        <h4 id="recTitle">Запис голосу</h4>
+        <div id="recBox"></div>
+        <div class="hint" id="recHint"></div>
+        <div class="savemsg" id="recStatus" style="color:var(--accent)"></div>
+      </div>
     </div>
   </div>
 
@@ -206,6 +219,8 @@ const I18N = {
     notesPlaceholder:'Нотатки: що вдалося, що ні, скільки хвилин…',
     saved:'Збережено', saveErr:'Не вдалося зберегти — спробуйте ще раз', dateSaved:'Дату збережено',
     exportBtn:'Експорт', importBtn:'Імпорт', imported:'Прогрес завантажено', importErr:'Не вдалося прочитати файл',
+    recTitle:'Запис голосу', recStart:'🎙 Записати', recStop:'⏹ Стоп', recAgain:'🎙 Ще раз', recDownload:'⬇ Завантажити',
+    recHint:'Запис живе лише зараз — завантажте файл, щоб зберегти чи надіслати логопеду.', micDenied:'Немає доступу до мікрофона.',
     markDone:'Позначте галочкою, коли виконано.', checkAria:'Позначити виконаним',
     plus1:'+1', reset:'Скинути', start:'Старт', stop:'Стоп', setsWord:'підходів',
     statDone:'днів виконано', statVib:'днів з вібрацією', statStreak:'поспіль зараз',
@@ -254,6 +269,8 @@ const I18N = {
     notesPlaceholder:'Poznámky: čo sa podarilo, čo nie, koľko minút…',
     saved:'Uložené', saveErr:'Nepodarilo sa uložiť — skúste znova', dateSaved:'Dátum uložený',
     exportBtn:'Export', importBtn:'Import', imported:'Pokrok načítaný', importErr:'Súbor sa nepodarilo načítať',
+    recTitle:'Nahrávka hlasu', recStart:'🎙 Nahrať', recStop:'⏹ Stop', recAgain:'🎙 Znova', recDownload:'⬇ Stiahnuť',
+    recHint:'Nahrávka existuje len teraz — stiahnite súbor, ak ju chcete uložiť alebo poslať logopédovi.', micDenied:'Niet prístupu k mikrofónu.',
     markDone:'Označte fajkou, keď je hotové.', checkAria:'Označiť ako hotové',
     plus1:'+1', reset:'Vynulovať', start:'Štart', stop:'Stop', setsWord:'sérií',
     statDone:'dní hotových', statVib:'dní s vibráciou', statStreak:'v rade teraz',
@@ -302,6 +319,8 @@ const I18N = {
     notesPlaceholder:'Notes: what worked, what didn’t, how many minutes…',
     saved:'Saved', saveErr:'Could not save — please try again', dateSaved:'Date saved',
     exportBtn:'Export', importBtn:'Import', imported:'Progress loaded', importErr:'Could not read the file',
+    recTitle:'Voice recording', recStart:'🎙 Record', recStop:'⏹ Stop', recAgain:'🎙 Again', recDownload:'⬇ Download',
+    recHint:'The recording lives only now — download the file to keep it or send it to a therapist.', micDenied:'No microphone access.',
     markDone:'Tick the box when done.', checkAria:'Mark as done',
     plus1:'+1', reset:'Reset', start:'Start', stop:'Stop', setsWord:'sets',
     statDone:'days done', statVib:'days with vibration', statStreak:'current streak',
@@ -423,6 +442,9 @@ function applyLang(){
   document.getElementById('notes').setAttribute('placeholder',t.notesPlaceholder);
   document.getElementById('exportBtn').textContent=t.exportBtn;
   document.getElementById('importBtn').textContent=t.importBtn;
+  document.getElementById('recTitle').textContent=t.recTitle;
+  document.getElementById('recHint').textContent=t.recHint;
+  renderRec();
   document.getElementById('stDoneLbl').textContent=t.statDone;
   document.getElementById('stVibLbl').textContent=t.statVib;
   document.getElementById('stStreakLbl').textContent=t.statStreak;
@@ -574,7 +596,7 @@ function saveNotes(){
   persist();
 }
 function shiftDay(d){
-  stopAllTimers();
+  stopAllTimers(); resetRec();
   curDay=Math.min(56, Math.max(1, curDay+d));
   renderToday();
 }
@@ -621,6 +643,63 @@ function renderProgress(){
   }
 }
 
+// ---------- voice recording (session-only; download to keep) ----------
+// ponytail: recordings live in memory, not persisted. Upgrade path: IndexedDB per day.
+let rec = { mr:null, chunks:[], stream:null, url:null, blob:null, iv:null, secs:0 };
+const REC_MAX = 30; // ponytail: cap seconds so a blob can't grow unbounded
+
+async function toggleRec(){
+  if(rec.mr && rec.mr.state==='recording'){ stopRec(); return; }
+  if(!navigator.mediaDevices || !window.MediaRecorder){ document.getElementById('recStatus').textContent=L().micDenied; return; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    document.getElementById('recStatus').textContent='';
+    rec.stream=stream; rec.chunks=[];
+    const mr=new MediaRecorder(stream); rec.mr=mr;
+    mr.ondataavailable=e=>{ if(e.data && e.data.size) rec.chunks.push(e.data); };
+    mr.onstop=()=>{
+      clearInterval(rec.iv);
+      stream.getTracks().forEach(tr=>tr.stop());
+      if(rec.url) URL.revokeObjectURL(rec.url);
+      rec.blob=new Blob(rec.chunks, {type: mr.mimeType||'audio/webm'});
+      rec.url=URL.createObjectURL(rec.blob);
+      renderRec();
+    };
+    mr.start();
+    rec.secs=0;
+    rec.iv=setInterval(()=>{ rec.secs++; if(rec.secs>=REC_MAX) stopRec(); else updateRecTime(); }, 1000);
+    renderRec();
+  }catch(e){ document.getElementById('recStatus').textContent=L().micDenied; }
+}
+function stopRec(){ if(rec.mr && rec.mr.state==='recording') rec.mr.stop(); }
+function updateRecTime(){ const c=document.querySelector('#recBox .rectime'); if(c) c.textContent=rec.secs+'s'; }
+function recExt(blob){ const m=(blob&&blob.type)||''; if(m.includes('mp4')||m.includes('mpeg'))return 'm4a'; if(m.includes('ogg'))return 'ogg'; return 'webm'; }
+function renderRec(){
+  const t=L(), box=document.getElementById('recBox');
+  if(!box) return;
+  if(rec.mr && rec.mr.state==='recording'){
+    box.innerHTML=`<div class="recrow"><span class="recdot"></span>
+      <span class="count rectime" style="min-width:auto">${rec.secs}s</span>
+      <button class="bigbtn acc" onclick="toggleRec()">${t.recStop}</button></div>`;
+  } else if(rec.url){
+    box.innerHTML=`<div class="recrow">
+      <audio controls src="${rec.url}"></audio>
+      <a class="bigbtn ghost" href="${rec.url}" download="r-attempt.${recExt(rec.blob)}">${t.recDownload}</a>
+      <button class="bigbtn ghost" onclick="toggleRec()">${t.recAgain}</button></div>`;
+  } else {
+    box.innerHTML=`<div class="recrow"><button class="bigbtn acc" onclick="toggleRec()">${t.recStart}</button></div>`;
+  }
+}
+function resetRec(){
+  stopRec();
+  if(rec.stream) rec.stream.getTracks().forEach(tr=>tr.stop());
+  clearInterval(rec.iv);
+  if(rec.url) URL.revokeObjectURL(rec.url);
+  rec={ mr:null, chunks:[], stream:null, url:null, blob:null, iv:null, secs:0 };
+  const st=document.getElementById('recStatus'); if(st) st.textContent='';
+  renderRec();
+}
+
 // ---------- export / import (backup, share with a therapist) ----------
 function exportData(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
@@ -653,7 +732,7 @@ function importData(input){
 
 // ---------- views ----------
 function setView(v){
-  stopAllTimers();
+  stopAllTimers(); resetRec();
   document.getElementById('viewToday').classList.toggle('hidden', v!=='today');
   document.getElementById('viewProgress').classList.toggle('hidden', v!=='progress');
   document.getElementById('tabToday').classList.toggle('active', v==='today');
