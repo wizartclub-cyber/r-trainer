@@ -107,6 +107,7 @@ a.bigbtn{text-decoration:none; display:inline-block}
 .cell.partial{background:var(--amber); border-color:var(--amber); color:#fff; font-weight:600}
 .cell.missed{background:var(--accent-soft); border-color:var(--accent-soft); color:var(--accent)}
 .cell.today{outline:2px solid var(--ink); outline-offset:1px}
+.cell .mic{position:absolute; top:1px; right:2px; font-size:9px; line-height:1}
 .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:12.5px; color:var(--muted)}
 .dot{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px}
 
@@ -195,6 +196,7 @@ a.bigbtn{text-decoration:none; display:inline-block}
       <span><span class="dot" style="background:var(--amber)"></span><span id="legPartial"></span></span>
       <span><span class="dot" style="background:var(--accent-soft)"></span><span id="legMissed"></span></span>
       <span><span class="dot" style="background:#fff; border:1px solid var(--line)"></span><span id="legAhead"></span></span>
+      <span>🎙 <span id="legRec"></span></span>
     </div>
     <div class="hint" id="gridHint" style="margin-top:10px"></div>
   </div>
@@ -224,7 +226,7 @@ const I18N = {
     markDone:'Позначте галочкою, коли виконано.', checkAria:'Позначити виконаним',
     plus1:'+1', reset:'Скинути', start:'Старт', stop:'Стоп', setsWord:'підходів',
     statDone:'днів виконано', statVib:'днів з вібрацією', statStreak:'поспіль зараз',
-    legDone:'тренування + вібрація/виконано', legPartial:'частково', legMissed:'пропущено', legAhead:'попереду',
+    legDone:'тренування + вібрація/виконано', legPartial:'частково', legMissed:'пропущено', legAhead:'попереду', legRec:'є запис',
     gridHint:'Натисніть на клітинку, щоб відкрити той день і заповнити заднім числом.',
     phases:{1:'Фаза 1 · Гімнастика', 2:'Фаза 2 · Вібрація', 3:'Фаза 3 · Автоматизація'},
     EX:{
@@ -274,7 +276,7 @@ const I18N = {
     markDone:'Označte fajkou, keď je hotové.', checkAria:'Označiť ako hotové',
     plus1:'+1', reset:'Vynulovať', start:'Štart', stop:'Stop', setsWord:'sérií',
     statDone:'dní hotových', statVib:'dní s vibráciou', statStreak:'v rade teraz',
-    legDone:'cvičenie + vibrácia/hotové', legPartial:'čiastočne', legMissed:'vynechané', legAhead:'pred nami',
+    legDone:'cvičenie + vibrácia/hotové', legPartial:'čiastočne', legMissed:'vynechané', legAhead:'pred nami', legRec:'je nahrávka',
     gridHint:'Kliknite na políčko a otvorte daný deň, dá sa vyplniť aj spätne.',
     phases:{1:'Fáza 1 · Gymnastika', 2:'Fáza 2 · Vibrácia', 3:'Fáza 3 · Automatizácia'},
     EX:{
@@ -324,7 +326,7 @@ const I18N = {
     markDone:'Tick the box when done.', checkAria:'Mark as done',
     plus1:'+1', reset:'Reset', start:'Start', stop:'Stop', setsWord:'sets',
     statDone:'days done', statVib:'days with vibration', statStreak:'current streak',
-    legDone:'training + vibration/done', legPartial:'partly', legMissed:'missed', legAhead:'ahead',
+    legDone:'training + vibration/done', legPartial:'partly', legMissed:'missed', legAhead:'ahead', legRec:'has recording',
     gridHint:'Tap a cell to open that day and fill it in retroactively.',
     phases:{1:'Phase 1 · Gymnastics', 2:'Phase 2 · Vibration', 3:'Phase 3 · Automation'},
     EX:{
@@ -452,6 +454,7 @@ function applyLang(){
   document.getElementById('legPartial').textContent=t.legPartial;
   document.getElementById('legMissed').textContent=t.legMissed;
   document.getElementById('legAhead').textContent=t.legAhead;
+  document.getElementById('legRec').textContent=t.legRec;
   document.getElementById('gridHint').textContent=t.gridHint;
 }
 function setLang(lang){
@@ -627,7 +630,7 @@ function renderProgress(){
     row.appendChild(lbl);
     for(let d=1; d<=7; d++){
       const n=(w-1)*7+d;
-      const c=document.createElement('button'); c.className='cell'; c.textContent=n;
+      const c=document.createElement('button'); c.className='cell'; c.textContent=n; c.dataset.day=n;
       const r=state.days[n];
       const complete=dayComplete(n);
       const partial=r && !complete && (Object.keys(r.done).length>0 || r.vib);
@@ -641,6 +644,18 @@ function renderProgress(){
     }
     grid.appendChild(row);
   }
+  markRecDays(); // async: flag days that have a saved recording, once grid exists
+}
+async function markRecDays(){
+  let keys;
+  try{ keys=await idbKeys(); }catch(e){ return; }
+  const set=new Set(keys.map(Number));
+  document.querySelectorAll('#grid .cell').forEach(c=>{
+    const has=set.has(Number(c.dataset.day));
+    const mark=c.querySelector('.mic');
+    if(has && !mark){ const m=document.createElement('span'); m.className='mic'; m.textContent='🎙'; c.appendChild(m); }
+    else if(!has && mark){ mark.remove(); }
+  });
 }
 
 // ---------- voice recording (latest take persisted per day in IndexedDB) ----------
@@ -662,6 +677,7 @@ function idb(){
 function idbPut(k,v){ return idb().then(db=>new Promise((res,rej)=>{ const t=db.transaction('rec','readwrite'); t.objectStore('rec').put(v,k); t.oncomplete=res; t.onerror=()=>rej(t.error); })); }
 function idbGet(k){ return idb().then(db=>new Promise((res,rej)=>{ const t=db.transaction('rec','readonly'); const q=t.objectStore('rec').get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); })); }
 function idbDel(k){ return idb().then(db=>new Promise((res,rej)=>{ const t=db.transaction('rec','readwrite'); t.objectStore('rec').delete(k); t.oncomplete=res; t.onerror=()=>rej(t.error); })); }
+function idbKeys(){ return idb().then(db=>new Promise((res,rej)=>{ const t=db.transaction('rec','readonly'); const q=t.objectStore('rec').getAllKeys(); q.onsuccess=()=>res(q.result||[]); q.onerror=()=>rej(q.error); })); }
 
 async function toggleRec(){
   if(rec.mr && rec.mr.state==='recording'){ stopRec(); return; }
