@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#C2334D">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
 <title>Тренажер «Р»</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap&subset=cyrillic,latin,latin-ext" rel="stylesheet">
@@ -105,6 +108,8 @@ textarea{width:100%; border:1px solid var(--line); border-radius:12px; padding:1
 .settings label{font-weight:600; font-size:14px}
 .settings input[type=date]{border:1px solid var(--line); border-radius:10px; padding:8px 10px; font-family:var(--body); font-size:15px; margin-left:8px; background:#fff; color:var(--ink)}
 .hint{font-size:13px; color:var(--muted); margin-top:8px}
+.io{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
+.io .bigbtn{font-size:14px; padding:9px 14px}
 .warn{background:var(--accent-soft); border:1px solid #EFC4CE; color:var(--accent); border-radius:12px; padding:10px 14px; font-size:14px; margin-bottom:10px}
 .hidden{display:none}
 </style>
@@ -130,6 +135,12 @@ textarea{width:100%; border:1px solid var(--line); border-radius:12px; padding:1
     <div class="settings" id="startPanel">
       <label><span id="startLabelText">Дата початку курсу:</span> <input type="date" id="startInput"></label>
       <div class="hint" id="startHint">Курс триває 56 днів (8 тижнів). Дату можна змінити будь-коли.</div>
+      <div class="io">
+        <button class="bigbtn ghost" id="exportBtn" onclick="exportData()">Експорт</button>
+        <label class="bigbtn ghost" style="cursor:pointer"><span id="importBtn">Імпорт</span>
+          <input type="file" accept="application/json,.json" onchange="importData(this)" hidden>
+        </label>
+      </div>
     </div>
 
     <div class="daynav">
@@ -194,6 +205,7 @@ const I18N = {
     vibYes:'Так', vibPartial:'Частково', vibNo:'Ні',
     notesPlaceholder:'Нотатки: що вдалося, що ні, скільки хвилин…',
     saved:'Збережено', saveErr:'Не вдалося зберегти — спробуйте ще раз', dateSaved:'Дату збережено',
+    exportBtn:'Експорт', importBtn:'Імпорт', imported:'Прогрес завантажено', importErr:'Не вдалося прочитати файл',
     markDone:'Позначте галочкою, коли виконано.', checkAria:'Позначити виконаним',
     plus1:'+1', reset:'Скинути', start:'Старт', stop:'Стоп', setsWord:'підходів',
     statDone:'днів виконано', statVib:'днів з вібрацією', statStreak:'поспіль зараз',
@@ -241,6 +253,7 @@ const I18N = {
     vibYes:'Áno', vibPartial:'Čiastočne', vibNo:'Nie',
     notesPlaceholder:'Poznámky: čo sa podarilo, čo nie, koľko minút…',
     saved:'Uložené', saveErr:'Nepodarilo sa uložiť — skúste znova', dateSaved:'Dátum uložený',
+    exportBtn:'Export', importBtn:'Import', imported:'Pokrok načítaný', importErr:'Súbor sa nepodarilo načítať',
     markDone:'Označte fajkou, keď je hotové.', checkAria:'Označiť ako hotové',
     plus1:'+1', reset:'Vynulovať', start:'Štart', stop:'Stop', setsWord:'sérií',
     statDone:'dní hotových', statVib:'dní s vibráciou', statStreak:'v rade teraz',
@@ -288,6 +301,7 @@ const I18N = {
     vibYes:'Yes', vibPartial:'Partly', vibNo:'No',
     notesPlaceholder:'Notes: what worked, what didn’t, how many minutes…',
     saved:'Saved', saveErr:'Could not save — please try again', dateSaved:'Date saved',
+    exportBtn:'Export', importBtn:'Import', imported:'Progress loaded', importErr:'Could not read the file',
     markDone:'Tick the box when done.', checkAria:'Mark as done',
     plus1:'+1', reset:'Reset', start:'Start', stop:'Stop', setsWord:'sets',
     statDone:'days done', statVib:'days with vibration', statStreak:'current streak',
@@ -407,6 +421,8 @@ function applyLang(){
   const vibLabels={yes:t.vibYes, partial:t.vibPartial, no:t.vibNo};
   document.querySelectorAll('#vibOpts .vib').forEach(b=>{ b.textContent=vibLabels[b.dataset.v]; });
   document.getElementById('notes').setAttribute('placeholder',t.notesPlaceholder);
+  document.getElementById('exportBtn').textContent=t.exportBtn;
+  document.getElementById('importBtn').textContent=t.importBtn;
   document.getElementById('stDoneLbl').textContent=t.statDone;
   document.getElementById('stVibLbl').textContent=t.statVib;
   document.getElementById('stStreakLbl').textContent=t.statStreak;
@@ -605,6 +621,36 @@ function renderProgress(){
   }
 }
 
+// ---------- export / import (backup, share with a therapist) ----------
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='r-trainer-progress.json'; a.click();
+  URL.revokeObjectURL(url);
+  flashSave(L().saved);
+}
+function importData(input){
+  const f=input.files&&input.files[0]; if(!f){ return; }
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const s=JSON.parse(reader.result);
+      if(!s || typeof s!=='object' || typeof s.days!=='object') throw new Error('bad shape');
+      state=Object.assign({start:todayISO(), lang:'uk', days:{}}, s);
+      if(!I18N[state.lang]) state.lang='uk';
+      stopAllTimers();
+      persist(L().imported);
+      applyLang();
+      document.getElementById('startInput').value=state.start;
+      curDay=Math.min(56, Math.max(1, todayDayNum()));
+      setView('today');
+    }catch(e){ flashSave(L().importErr); }
+    input.value=''; // allow re-importing the same file
+  };
+  reader.readAsText(f);
+}
+
 // ---------- views ----------
 function setView(v){
   stopAllTimers();
@@ -625,6 +671,11 @@ function setView(v){
   curDay=Math.min(56, Math.max(1, todayDayNum()));
   renderToday();
 })();
+
+// PWA: installable + offline. Registration failure (file://, no SW support) is harmless.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
 </script>
 </body>
 </html>

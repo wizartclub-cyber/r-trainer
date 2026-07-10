@@ -1,0 +1,15 @@
+{
+  "name": "Тренажер «Р» / R Trainer",
+  "short_name": "R Trainer",
+  "lang": "uk",
+  "description": "56-денний тренажер для постановки звуку «Р» / rolled-R speech-therapy trainer",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F5F4",
+  "theme_color": "#C2334D",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
