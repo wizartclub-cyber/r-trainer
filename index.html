@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тренажер «Р»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap&subset=cyrillic,latin,latin-ext" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5F4; --card:#FFFFFF; --ink:#16302B; --muted:#5E7470;
+  --accent:#C2334D; --accent-soft:#F9E3E8;
+  --green:#3E7C6F; --green-soft:#E2EFEA;
+  --amber:#B97E10; --amber-soft:#FAF0DA;
+  --line:#DCE4E1;
+  --disp:'Unbounded', system-ui, sans-serif;
+  --body:'IBM Plex Sans', system-ui, sans-serif;
+}
+*{box-sizing:border-box; margin:0}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.45; padding:16px 12px 60px}
+.wrap{max-width:620px; margin:0 auto}
+
+/* header */
+header{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap}
+.logo{font-family:var(--disp); font-weight:700; font-size:20px; letter-spacing:.5px}
+.logo .r{color:var(--accent)}
+.headright{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+.langsel{border:1px solid var(--line); background:var(--card); color:var(--muted); border-radius:20px; padding:7px 10px; font-family:var(--body); font-weight:600; font-size:13px; cursor:pointer}
+.tabs{display:flex; gap:6px}
+.tab{border:1px solid var(--line); background:var(--card); color:var(--muted); border-radius:20px; padding:7px 14px; font-family:var(--body); font-weight:600; font-size:14px; cursor:pointer}
+.tab.active{background:var(--ink); color:#fff; border-color:var(--ink)}
+.tab:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+/* day nav */
+.daynav{display:flex; align-items:center; justify-content:space-between; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:10px 12px; margin-bottom:12px}
+.daynav button{background:none; border:1px solid var(--line); border-radius:10px; width:38px; height:38px; font-size:18px; cursor:pointer; color:var(--ink)}
+.daynav button:disabled{opacity:.3; cursor:default}
+.daymeta{text-align:center}
+.daymeta .dn{font-family:var(--disp); font-weight:700; font-size:17px}
+.daymeta .dd{font-size:13px; color:var(--muted)}
+.phasebadge{display:inline-block; font-size:12px; font-weight:600; border-radius:12px; padding:2px 10px; margin-top:3px}
+.ph1{background:var(--amber-soft); color:var(--amber)}
+.ph2{background:var(--accent-soft); color:var(--accent)}
+.ph3{background:var(--green-soft); color:var(--green)}
+
+/* exercise cards */
+.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px}
+.card.done{border-color:var(--green); background:var(--green-soft)}
+.exhead{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+.exname{font-weight:600; font-size:16.5px}
+.exdesc{color:var(--muted); font-size:14px; margin-top:4px}
+.exdose{font-size:13px; font-weight:600; color:var(--accent); margin-top:4px}
+.card.done .exdose{color:var(--green)}
+.checkbtn{flex:none; width:30px; height:30px; border-radius:50%; border:2px solid var(--line); background:#fff; cursor:pointer; font-size:15px; color:transparent; line-height:1}
+.card.done .checkbtn{background:var(--green); border-color:var(--green); color:#fff}
+
+/* controls */
+.ctrl{display:flex; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap}
+.bigbtn{font-family:var(--body); font-weight:600; font-size:15px; border:none; border-radius:12px; padding:11px 18px; cursor:pointer}
+.bigbtn.acc{background:var(--accent); color:#fff}
+.bigbtn.ghost{background:none; border:1px solid var(--line); color:var(--ink)}
+.count{font-family:var(--disp); font-weight:700; font-size:22px; min-width:74px; text-align:center}
+.count small{font-size:12px; color:var(--muted); font-family:var(--body); font-weight:500; display:block}
+
+/* timer ring — signature element */
+.ring{position:relative; width:96px; height:96px; flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .t{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--disp); font-weight:700; font-size:22px}
+.ripple{position:absolute; inset:0; border-radius:50%; border:2px solid var(--accent); opacity:0; pointer-events:none}
+.running .ripple{animation:rip 1.2s ease-out infinite}
+.running .ripple.r2{animation-delay:.6s}
+@keyframes rip{0%{transform:scale(.85); opacity:.55}100%{transform:scale(1.28); opacity:0}}
+@media (prefers-reduced-motion: reduce){.ripple{animation:none !important}}
+
+/* session log */
+.log h3{font-family:var(--disp); font-weight:700; font-size:15px; margin-bottom:10px}
+.viboptions{display:flex; gap:8px; flex-wrap:wrap}
+.vib{border:1px solid var(--line); background:#fff; border-radius:20px; padding:8px 16px; font-weight:600; font-size:14px; cursor:pointer; color:var(--muted)}
+.vib.sel-yes{background:var(--green); border-color:var(--green); color:#fff}
+.vib.sel-partial{background:var(--amber); border-color:var(--amber); color:#fff}
+.vib.sel-no{background:var(--ink); border-color:var(--ink); color:#fff}
+textarea{width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-family:var(--body); font-size:15px; margin-top:10px; resize:vertical; min-height:64px; background:#fff; color:var(--ink)}
+.savemsg{font-size:13px; color:var(--green); font-weight:600; margin-top:8px; min-height:18px}
+
+/* progress */
+.stats{display:flex; gap:10px; margin-bottom:12px}
+.stat{flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px; text-align:center}
+.stat .num{font-family:var(--disp); font-weight:700; font-size:26px}
+.stat.acc .num{color:var(--accent)}
+.stat.grn .num{color:var(--green)}
+.stat .lbl{font-size:12.5px; color:var(--muted); margin-top:2px}
+.gridwrap{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px}
+.weekrow{display:flex; align-items:center; gap:6px; margin-bottom:6px}
+.weeklbl{width:64px; font-size:12px; color:var(--muted); font-weight:600; flex:none}
+.cell{flex:1; aspect-ratio:1; max-width:52px; border-radius:9px; border:1px solid var(--line); background:#fff; cursor:pointer; position:relative; font-size:11px; color:var(--muted); font-family:var(--body); padding:0}
+.cell.done{background:var(--green); border-color:var(--green); color:#fff; font-weight:600}
+.cell.partial{background:var(--amber); border-color:var(--amber); color:#fff; font-weight:600}
+.cell.missed{background:var(--accent-soft); border-color:var(--accent-soft); color:var(--accent)}
+.cell.today{outline:2px solid var(--ink); outline-offset:1px}
+.legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:12.5px; color:var(--muted)}
+.dot{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px}
+
+/* settings */
+.settings{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:12px}
+.settings label{font-weight:600; font-size:14px}
+.settings input[type=date]{border:1px solid var(--line); border-radius:10px; padding:8px 10px; font-family:var(--body); font-size:15px; margin-left:8px; background:#fff; color:var(--ink)}
+.hint{font-size:13px; color:var(--muted); margin-top:8px}
+.warn{background:var(--accent-soft); border:1px solid #EFC4CE; color:var(--accent); border-radius:12px; padding:10px 14px; font-size:14px; margin-bottom:10px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" id="logo"></div>
+    <div class="headright">
+      <select class="langsel" id="langSel" onchange="setLang(this.value)" aria-label="Мова / Jazyk / Language">
+        <option value="uk">🇺🇦 Українська</option>
+        <option value="sk">🇸🇰 Slovenčina</option>
+        <option value="en">🇬🇧 English</option>
+      </select>
+      <div class="tabs">
+        <button class="tab active" id="tabToday" onclick="setView('today')">Сьогодні</button>
+        <button class="tab" id="tabProg" onclick="setView('progress')">Прогрес</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="viewToday">
+    <div class="settings" id="startPanel">
+      <label><span id="startLabelText">Дата початку курсу:</span> <input type="date" id="startInput"></label>
+      <div class="hint" id="startHint">Курс триває 56 днів (8 тижнів). Дату можна змінити будь-коли.</div>
+    </div>
+
+    <div class="daynav">
+      <button id="prevDay" aria-label="Попередній день" onclick="shiftDay(-1)">‹</button>
+      <div class="daymeta">
+        <div class="dn" id="dayTitle">День 1</div>
+        <div class="dd" id="dayDate"></div>
+        <span class="phasebadge" id="phaseBadge"></span>
+      </div>
+      <button id="nextDay" aria-label="Наступний день" onclick="shiftDay(1)">›</button>
+    </div>
+
+    <div id="vibWarn" class="warn hidden"></div>
+
+    <div id="exList"></div>
+
+    <div class="card log">
+      <h3 id="summaryTitle">Підсумок дня</h3>
+      <div style="font-size:14px; color:var(--muted); margin-bottom:8px" id="vibQuestion">Чи виходила вібрація кінчика язика?</div>
+      <div class="viboptions" id="vibOpts">
+        <button class="vib" data-v="yes" onclick="setVib('yes')">Так</button>
+        <button class="vib" data-v="partial" onclick="setVib('partial')">Частково</button>
+        <button class="vib" data-v="no" onclick="setVib('no')">Ні</button>
+      </div>
+      <textarea id="notes" placeholder="Нотатки…" onblur="saveNotes()"></textarea>
+      <div class="savemsg" id="saveMsg"></div>
+    </div>
+  </div>
+
+  <div id="viewProgress" class="hidden">
+    <div class="stats">
+      <div class="stat grn"><div class="num" id="stDone">0</div><div class="lbl" id="stDoneLbl">днів виконано</div></div>
+      <div class="stat acc"><div class="num" id="stVib">0</div><div class="lbl" id="stVibLbl">днів з вібрацією</div></div>
+      <div class="stat"><div class="num" id="stStreak">0</div><div class="lbl" id="stStreakLbl">поспіль зараз</div></div>
+    </div>
+    <div class="gridwrap" id="grid"></div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--green)"></span><span id="legDone"></span></span>
+      <span><span class="dot" style="background:var(--amber)"></span><span id="legPartial"></span></span>
+      <span><span class="dot" style="background:var(--accent-soft)"></span><span id="legMissed"></span></span>
+      <span><span class="dot" style="background:#fff; border:1px solid var(--line)"></span><span id="legAhead"></span></span>
+    </div>
+    <div class="hint" id="gridHint" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<script>
+// ---------- i18n ----------
+// Structural fields (type/target/sets/sec) are shared via stable ids; text is per-language.
+const I18N = {
+  uk:{
+    htmlLang:'uk', locale:'uk-UA', title:'Тренажер «Р»',
+    logo:['Тренажер «','Р','»'],
+    tabToday:'Сьогодні', tabProg:'Прогрес',
+    startLabel:'Дата початку курсу:',
+    startHint:'Курс триває 56 днів (8 тижнів). Дату можна змінити будь-коли.',
+    dayWord:'День', weekWord:'тиждень', weekShort:'Тиж.',
+    prevAria:'Попередній день', nextAria:'Наступний день',
+    vibWarn:"За 2 тижні фази вібрації прогресу немає. Рекомендація: перевірити під'язикову вуздечку в логопеда, перш ніж тренуватися далі.",
+    summaryTitle:'Підсумок дня',
+    vibQuestion:'Чи виходила вібрація кінчика язика?',
+    vibYes:'Так', vibPartial:'Частково', vibNo:'Ні',
+    notesPlaceholder:'Нотатки: що вдалося, що ні, скільки хвилин…',
+    saved:'Збережено', saveErr:'Не вдалося зберегти — спробуйте ще раз', dateSaved:'Дату збережено',
+    markDone:'Позначте галочкою, коли виконано.', checkAria:'Позначити виконаним',
+    plus1:'+1', reset:'Скинути', start:'Старт', stop:'Стоп', setsWord:'підходів',
+    statDone:'днів виконано', statVib:'днів з вібрацією', statStreak:'поспіль зараз',
+    legDone:'тренування + вібрація/виконано', legPartial:'частково', legMissed:'пропущено', legAhead:'попереду',
+    gridHint:'Натисніть на клітинку, щоб відкрити той день і заповнити заднім числом.',
+    phases:{1:'Фаза 1 · Гімнастика', 2:'Фаза 2 · Вібрація', 3:'Фаза 3 · Автоматизація'},
+    EX:{
+      gym:[
+        {id:'konyachka', type:'reps', target:15, name:'«Конячка»', desc:'Цокайте язиком, присмоктуючи його до піднебіння. Нижня щелепа нерухома.', unit:'разів'},
+        {id:'grybok', type:'timer', sets:10, sec:7, name:'«Грибок»', desc:'Присмокчіть язик до піднебіння і тримайте, розтягуючи вуздечку.', unit:'утримань по 7 с'},
+        {id:'malyar', type:'reps', target:15, name:'«Маляр»', desc:'Кінчиком язика водіть по піднебінню вперед-назад, як пензлем.', unit:'разів'},
+        {id:'baraban', type:'timer', sets:5, sec:10, name:'«Барабанщик»', desc:'Швидко повторюйте «д-д-д-д»: язик б\'є по горбках за верхніми зубами, рот відкритий, щелепа нерухома. Рука на горлі — горло не вібрує.', unit:'підходів по 10 с'}
+      ],
+      vibr:[
+        {id:'warmup', type:'timer', sets:3, sec:10, name:'Розминка: «Барабанщик»', desc:'«Д-д-д-д» по альвеолах, рот відкритий.', unit:'підходів по 10 с'},
+        {id:'cherezD', type:'reps', target:10, name:'Запуск через «Д»', desc:'Швидке «д-д-д» + різкий сильний видих → «др-р». Далі склади: дра, дро, дру, тра, тро, тру.', unit:'спроб'},
+        {id:'mech', type:'timer', sets:5, sec:20, name:'Механічний запуск', desc:'Довге «жжж» або «д-д-д», і чистим пальцем чи ватною паличкою швидко рухайте під кінчиком язика вліво-вправо. Запам\'ятовуйте відчуття вібрації.', unit:'підходів по 20 с'},
+        {id:'throat', type:'check', name:'Контроль горла', desc:'Під час усіх вправ тримайте руку на горлі: вібрувати має лише кінчик язика, не горло.'}
+      ],
+      auto1:[
+        {id:'warmup2', type:'timer', sets:2, sec:15, name:'Розминка: «др-р», «тр-р»', desc:'Кілька запусків вібрації для розігріву.', unit:'підходи по 15 с'},
+        {id:'sklady', type:'reps', target:10, name:'Склади', desc:'ра-ро-ру-ри, ар-ор-ур-ир. Чітко, з вібрацією.', unit:'повторів'},
+        {id:'slova', type:'reps', target:10, name:'Слова', desc:'Р на початку: рак, риба, робота, рука. Р в середині: гора, перо, дорога, море.', unit:'повторів'},
+        {id:'spol', type:'reps', target:10, name:'Сполучення', desc:'тра, дра, кра, бра → трава, дракон, крапля, брат, метро, відро.', unit:'повторів'}
+      ],
+      auto2:[
+        {id:'warmup3', type:'reps', target:5, name:'Розминка: склади', desc:'ра-ро-ру-ри, тра-дра-кра.', unit:'повторів'},
+        {id:'skoro', type:'reps', target:10, name:'Скоромовки', desc:'«На горі Арарат росте великий виноград». «Риє землю сірий кріт — риє, риє огород». Спочатку повільно, потім швидко.', unit:'повторів'},
+        {id:'read', type:'timer', sets:1, sec:300, name:'Читання вголос', desc:'Будь-який текст. Свідомо контролюйте кожне «Р».', unit:'× 5 хв'},
+        {id:'speech', type:'check', name:'Контроль у мові', desc:'Сьогодні у розмовах свідомо стежте за «Р» хоча б у кількох фразах.'}
+      ]
+    }
+  },
+  sk:{
+    htmlLang:'sk', locale:'sk-SK', title:'Tréner „R“',
+    logo:['Tréner „','R','“'],
+    tabToday:'Dnes', tabProg:'Pokrok',
+    startLabel:'Dátum začiatku kurzu:',
+    startHint:'Kurz trvá 56 dní (8 týždňov). Dátum sa dá kedykoľvek zmeniť.',
+    dayWord:'Deň', weekWord:'týždeň', weekShort:'Týž.',
+    prevAria:'Predchádzajúci deň', nextAria:'Nasledujúci deň',
+    vibWarn:'Za 2 týždne fázy vibrácie niet pokroku. Odporúčanie: pred ďalším cvičením dajte logopédovi skontrolovať podjazykovú uzdičku.',
+    summaryTitle:'Zhrnutie dňa',
+    vibQuestion:'Podarila sa vibrácia špičky jazyka?',
+    vibYes:'Áno', vibPartial:'Čiastočne', vibNo:'Nie',
+    notesPlaceholder:'Poznámky: čo sa podarilo, čo nie, koľko minút…',
+    saved:'Uložené', saveErr:'Nepodarilo sa uložiť — skúste znova', dateSaved:'Dátum uložený',
+    markDone:'Označte fajkou, keď je hotové.', checkAria:'Označiť ako hotové',
+    plus1:'+1', reset:'Vynulovať', start:'Štart', stop:'Stop', setsWord:'sérií',
+    statDone:'dní hotových', statVib:'dní s vibráciou', statStreak:'v rade teraz',
+    legDone:'cvičenie + vibrácia/hotové', legPartial:'čiastočne', legMissed:'vynechané', legAhead:'pred nami',
+    gridHint:'Kliknite na políčko a otvorte daný deň, dá sa vyplniť aj spätne.',
+    phases:{1:'Fáza 1 · Gymnastika', 2:'Fáza 2 · Vibrácia', 3:'Fáza 3 · Automatizácia'},
+    EX:{
+      gym:[
+        {id:'konyachka', type:'reps', target:15, name:'„Koník“', desc:'Mľaskajte jazykom, prisatím k podnebiu. Dolná čeľusť sa nehýbe.', unit:'krát'},
+        {id:'grybok', type:'timer', sets:10, sec:7, name:'„Hríbik“', desc:'Prisajte jazyk k podnebiu a držte, naťahujte podjazykovú uzdičku.', unit:'výdrží po 7 s'},
+        {id:'malyar', type:'reps', target:15, name:'„Maliar“', desc:'Špičkou jazyka prechádzajte po podnebí dopredu-dozadu ako štetcom.', unit:'krát'},
+        {id:'baraban', type:'timer', sets:5, sec:10, name:'„Bubeník“', desc:'Rýchlo opakujte „d-d-d-d“: jazyk klope na hrbolčeky za hornými zubami, ústa otvorené, čeľusť nehybná. Ruka na hrdle — hrdlo nevibruje.', unit:'sérií po 10 s'}
+      ],
+      vibr:[
+        {id:'warmup', type:'timer', sets:3, sec:10, name:'Rozcvička: „Bubeník“', desc:'„D-d-d-d“ na alveoly, ústa otvorené.', unit:'sérií po 10 s'},
+        {id:'cherezD', type:'reps', target:10, name:'Spustenie cez „D“', desc:'Rýchle „d-d-d“ + prudký silný výdych → „dr-r“. Ďalej slabiky: dra, dro, dru, tra, tro, tru.', unit:'pokusov'},
+        {id:'mech', type:'timer', sets:5, sec:20, name:'Mechanické spustenie', desc:'Dlhé „žžž“ alebo „d-d-d“ a čistým prstom či vatovou tyčinkou rýchlo pohybujte pod špičkou jazyka doľava-doprava. Zapamätajte si pocit vibrácie.', unit:'sérií po 20 s'},
+        {id:'throat', type:'check', name:'Kontrola hrdla', desc:'Počas všetkých cvičení držte ruku na hrdle: vibrovať má iba špička jazyka, nie hrdlo.'}
+      ],
+      auto1:[
+        {id:'warmup2', type:'timer', sets:2, sec:15, name:'Rozcvička: „dr-r“, „tr-r“', desc:'Niekoľko spustení vibrácie na zahriatie.', unit:'série po 15 s'},
+        {id:'sklady', type:'reps', target:10, name:'Slabiky', desc:'ra-ro-ru-ri, ar-or-ur-ir. Zreteľne, s vibráciou.', unit:'opakovaní'},
+        {id:'slova', type:'reps', target:10, name:'Slová', desc:'R na začiatku: ruka, ryba, rok, ráno. R v strede: hora, pero, dvere, more.', unit:'opakovaní'},
+        {id:'spol', type:'reps', target:10, name:'Spojenia', desc:'tra, dra, kra, bra → tráva, drak, krava, brat, prút, hrad.', unit:'opakovaní'}
+      ],
+      auto2:[
+        {id:'warmup3', type:'reps', target:5, name:'Rozcvička: slabiky', desc:'ra-ro-ru-ri, tra-dra-kra.', unit:'opakovaní'},
+        {id:'skoro', type:'reps', target:10, name:'Jazykolamy', desc:'„Strč prst skrz krk.“ „Tri sta tri strieborných striech.“ Najprv pomaly, potom rýchlo.', unit:'opakovaní'},
+        {id:'read', type:'timer', sets:1, sec:300, name:'Čítanie nahlas', desc:'Akýkoľvek text. Vedome kontrolujte každé „R“.', unit:'× 5 min'},
+        {id:'speech', type:'check', name:'Kontrola v reči', desc:'Dnes v rozhovoroch vedome sledujte „R“ aspoň v niekoľkých vetách.'}
+      ]
+    }
+  },
+  en:{
+    htmlLang:'en', locale:'en-US', title:'“R” Trainer',
+    logo:['“','R','” Trainer'],
+    tabToday:'Today', tabProg:'Progress',
+    startLabel:'Course start date:',
+    startHint:'The course runs 56 days (8 weeks). You can change the date anytime.',
+    dayWord:'Day', weekWord:'week', weekShort:'Wk',
+    prevAria:'Previous day', nextAria:'Next day',
+    vibWarn:'No progress after 2 weeks of the vibration phase. Recommendation: have a speech therapist check the lingual frenulum before training further.',
+    summaryTitle:'Day summary',
+    vibQuestion:'Did the tongue tip vibrate?',
+    vibYes:'Yes', vibPartial:'Partly', vibNo:'No',
+    notesPlaceholder:'Notes: what worked, what didn’t, how many minutes…',
+    saved:'Saved', saveErr:'Could not save — please try again', dateSaved:'Date saved',
+    markDone:'Tick the box when done.', checkAria:'Mark as done',
+    plus1:'+1', reset:'Reset', start:'Start', stop:'Stop', setsWord:'sets',
+    statDone:'days done', statVib:'days with vibration', statStreak:'current streak',
+    legDone:'training + vibration/done', legPartial:'partly', legMissed:'missed', legAhead:'ahead',
+    gridHint:'Tap a cell to open that day and fill it in retroactively.',
+    phases:{1:'Phase 1 · Gymnastics', 2:'Phase 2 · Vibration', 3:'Phase 3 · Automation'},
+    EX:{
+      gym:[
+        {id:'konyachka', type:'reps', target:15, name:'“Horse” (clopping)', desc:'Cluck your tongue, suctioning it to the roof of the mouth. The lower jaw stays still.', unit:'times'},
+        {id:'grybok', type:'timer', sets:10, sec:7, name:'“Mushroom”', desc:'Suction the tongue to the palate and hold, stretching the frenulum.', unit:'holds of 7 s'},
+        {id:'malyar', type:'reps', target:15, name:'“Painter”', desc:'Run the tongue tip along the palate back and forth, like a brush.', unit:'times'},
+        {id:'baraban', type:'timer', sets:5, sec:10, name:'“Drummer”', desc:'Rapidly repeat “d-d-d-d”: the tongue taps the ridge behind the upper teeth, mouth open, jaw still. Hand on the throat — the throat must not vibrate.', unit:'sets of 10 s'}
+      ],
+      vibr:[
+        {id:'warmup', type:'timer', sets:3, sec:10, name:'Warm-up: “Drummer”', desc:'“D-d-d-d” on the alveolar ridge, mouth open.', unit:'sets of 10 s'},
+        {id:'cherezD', type:'reps', target:10, name:'Launch through “D”', desc:'Fast “d-d-d” + a sharp strong exhale → “dr-r”. Then syllables: dra, dro, droo, tra, tro, troo.', unit:'attempts'},
+        {id:'mech', type:'timer', sets:5, sec:20, name:'Mechanical launch', desc:'A long “zhzh” or “d-d-d”, and with a clean finger or cotton swab move quickly left-right under the tongue tip. Memorize the feeling of vibration.', unit:'sets of 20 s'},
+        {id:'throat', type:'check', name:'Throat check', desc:'During every exercise keep a hand on your throat: only the tongue tip should vibrate, not the throat.'}
+      ],
+      auto1:[
+        {id:'warmup2', type:'timer', sets:2, sec:15, name:'Warm-up: “dr-r”, “tr-r”', desc:'A few vibration launches to warm up.', unit:'sets of 15 s'},
+        {id:'sklady', type:'reps', target:10, name:'Syllables', desc:'ra-ro-ru-ri, ar-or-ur-ir. Clearly, with the roll.', unit:'reps'},
+        {id:'slova', type:'reps', target:10, name:'Words', desc:'R at the start: red, rabbit, river, road. R in the middle: carry, arrow, around, berry.', unit:'reps'},
+        {id:'spol', type:'reps', target:10, name:'Clusters', desc:'tr, dr, cr, br → tree, dream, cross, brave, grass, print.', unit:'reps'}
+      ],
+      auto2:[
+        {id:'warmup3', type:'reps', target:5, name:'Warm-up: syllables', desc:'ra-ro-ru-ri, tra-dra-cra.', unit:'reps'},
+        {id:'skoro', type:'reps', target:10, name:'Tongue twisters', desc:'“Round the rugged rocks the ragged rascal ran.” “Red lorry, yellow lorry.” Slowly first, then fast.', unit:'reps'},
+        {id:'read', type:'timer', sets:1, sec:300, name:'Reading aloud', desc:'Any text. Consciously control every “R”.', unit:'× 5 min'},
+        {id:'speech', type:'check', name:'Control in speech', desc:'Today, consciously watch your “R” in conversation, at least in a few phrases.'}
+      ]
+    }
+  }
+};
+function L(){ return I18N[state.lang] || I18N.uk; }
+
+function phaseOfWeek(w){ return w<=2?1 : w<=4?2 : 3; }
+function exercisesFor(week){
+  const EX = L().EX, p = phaseOfWeek(week);
+  if(p===1) return EX.gym;
+  if(p===2) return EX.vibr;
+  return week<=6 ? EX.auto1 : EX.auto2;
+}
+
+// ---------- state ----------
+let state = { start: todayISO(), lang:'uk', days: {} };
+let curDay = 1;
+let saveTimer = null;
+
+function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function dateOfDay(n){ const d=new Date(state.start+'T00:00:00'); d.setDate(d.getDate()+n-1); return d; }
+function fmtDate(d){ return d.toLocaleDateString(L().locale,{weekday:'short', day:'numeric', month:'long'}); }
+function todayDayNum(){
+  const s=new Date(state.start+'T00:00:00'), t=new Date(todayISO()+'T00:00:00');
+  return Math.floor((t-s)/86400000)+1;
+}
+function dayRec(n){
+  if(!state.days[n]) state.days[n] = {done:{}, vib:null, notes:'', prog:{}};
+  return state.days[n];
+}
+function dayComplete(n){
+  const rec = state.days[n]; if(!rec) return false;
+  const week = Math.floor((n-1)/7)+1;
+  return exercisesFor(week).every(e=>rec.done[e.id]);
+}
+
+// ---------- storage (localStorage — runs anywhere, incl. GitHub Pages) ----------
+function load(){
+  try{
+    const v = localStorage.getItem('rtrainer:v1');
+    if(v){ const s=JSON.parse(v); if(s && typeof s==='object') state = Object.assign({start:todayISO(), lang:'uk', days:{}}, s); }
+  }catch(e){ /* перший запуск / first run — no data yet */ }
+  if(!I18N[state.lang]) state.lang='uk';
+}
+function persist(msg){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{ localStorage.setItem('rtrainer:v1', JSON.stringify(state)); flashSave(msg||L().saved); }
+    catch(e){ flashSave(L().saveErr); }
+  }, 300);
+}
+function flashSave(t){
+  const el=document.getElementById('saveMsg'); el.textContent=t;
+  setTimeout(()=>{ if(el.textContent===t) el.textContent=''; }, 2500);
+}
+
+// ---------- audio ----------
+let actx=null;
+function beep(){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.frequency.value=880; o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(.001, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.25, actx.currentTime+.02);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime+.5);
+    o.start(); o.stop(actx.currentTime+.55);
+  }catch(e){}
+}
+
+// ---------- language ----------
+function applyLang(){
+  const t=L();
+  document.documentElement.lang=t.htmlLang;
+  document.title=t.title;
+  document.getElementById('langSel').value=state.lang;
+  document.getElementById('logo').innerHTML=`${t.logo[0]}<span class="r">${t.logo[1]}</span>${t.logo[2]}`;
+  document.getElementById('tabToday').textContent=t.tabToday;
+  document.getElementById('tabProg').textContent=t.tabProg;
+  document.getElementById('startLabelText').textContent=t.startLabel;
+  document.getElementById('startHint').textContent=t.startHint;
+  document.getElementById('prevDay').setAttribute('aria-label',t.prevAria);
+  document.getElementById('nextDay').setAttribute('aria-label',t.nextAria);
+  document.getElementById('vibWarn').textContent=t.vibWarn;
+  document.getElementById('summaryTitle').textContent=t.summaryTitle;
+  document.getElementById('vibQuestion').textContent=t.vibQuestion;
+  const vibLabels={yes:t.vibYes, partial:t.vibPartial, no:t.vibNo};
+  document.querySelectorAll('#vibOpts .vib').forEach(b=>{ b.textContent=vibLabels[b.dataset.v]; });
+  document.getElementById('notes').setAttribute('placeholder',t.notesPlaceholder);
+  document.getElementById('stDoneLbl').textContent=t.statDone;
+  document.getElementById('stVibLbl').textContent=t.statVib;
+  document.getElementById('stStreakLbl').textContent=t.statStreak;
+  document.getElementById('legDone').textContent=t.legDone;
+  document.getElementById('legPartial').textContent=t.legPartial;
+  document.getElementById('legMissed').textContent=t.legMissed;
+  document.getElementById('legAhead').textContent=t.legAhead;
+  document.getElementById('gridHint').textContent=t.gridHint;
+}
+function setLang(lang){
+  if(!I18N[lang]) return;
+  stopAllTimers();
+  state.lang=lang;
+  applyLang();
+  persist();
+  const onToday = !document.getElementById('viewToday').classList.contains('hidden');
+  if(onToday) renderToday(); else renderProgress();
+}
+
+// ---------- rendering: today ----------
+const timers = {}; // exId -> {left, iv}
+
+function renderToday(){
+  const t=L();
+  const week = Math.floor((curDay-1)/7)+1;
+  const p = phaseOfWeek(week);
+  document.getElementById('dayTitle').textContent = `${t.dayWord} ${curDay} · ${t.weekWord} ${week}`;
+  document.getElementById('dayDate').textContent = fmtDate(dateOfDay(curDay));
+  const b=document.getElementById('phaseBadge');
+  b.textContent = t.phases[p]; b.className = 'phasebadge ph'+p;
+  document.getElementById('prevDay').disabled = curDay<=1;
+  document.getElementById('nextDay').disabled = curDay>=56;
+
+  // warning: end of week 4, no vibration at all
+  const warn = document.getElementById('vibWarn');
+  let show=false;
+  if(curDay>=28){
+    const logged = Object.keys(state.days).filter(n=>n>=15 && n<=28 && state.days[n].vib);
+    if(logged.length>=8 && logged.every(n=>state.days[n].vib==='no')) show=true;
+  }
+  warn.classList.toggle('hidden', !show);
+
+  const rec = dayRec(curDay);
+  const list = document.getElementById('exList');
+  list.innerHTML='';
+  exercisesFor(week).forEach(ex=>{
+    const done = !!rec.done[ex.id];
+    const card=document.createElement('div');
+    card.className='card'+(done?' done':'');
+    card.id='card-'+ex.id;
+    let dose='';
+    if(ex.type==='reps') dose=`${ex.target} ${ex.unit}`;
+    else if(ex.type==='timer') dose=`${ex.sets} ${ex.unit}`;
+    card.innerHTML = `
+      <div class="exhead">
+        <div>
+          <div class="exname">${ex.name}</div>
+          <div class="exdesc">${ex.desc}</div>
+          ${dose?`<div class="exdose">${dose}</div>`:''}
+        </div>
+        <button class="checkbtn" aria-label="${t.checkAria}" onclick="toggleDone('${ex.id}')">✓</button>
+      </div>
+      <div class="ctrl" id="ctrl-${ex.id}"></div>`;
+    list.appendChild(card);
+    renderCtrl(ex, rec);
+  });
+
+  // vib + notes
+  document.querySelectorAll('#vibOpts .vib').forEach(btn=>{
+    btn.className='vib'+(rec.vib===btn.dataset.v?' sel-'+rec.vib:'');
+  });
+  document.getElementById('notes').value = rec.notes||'';
+}
+
+function renderCtrl(ex, rec){
+  const t=L();
+  const box=document.getElementById('ctrl-'+ex.id);
+  if(!box) return;
+  const prog = rec.prog[ex.id]||0;
+  if(ex.type==='reps'){
+    box.innerHTML = `
+      <button class="bigbtn acc" onclick="incRep('${ex.id}',${ex.target})">${t.plus1}</button>
+      <div class="count">${prog} / ${ex.target}<small>${ex.unit}</small></div>
+      <button class="bigbtn ghost" onclick="resetProg('${ex.id}')">${t.reset}</button>`;
+  } else if(ex.type==='timer'){
+    const tm = timers[ex.id];
+    const left = tm? tm.left : ex.sec;
+    const frac = 1 - left/ex.sec;
+    const C = 2*Math.PI*42;
+    box.innerHTML = `
+      <div class="ring ${tm?'running':''}" id="ring-${ex.id}">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="42" fill="none" stroke="var(--line)" stroke-width="6"/>
+          <circle cx="48" cy="48" r="42" fill="none" stroke="var(--accent)" stroke-width="6"
+            stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-frac)}"/>
+        </svg>
+        <div class="ripple"></div><div class="ripple r2"></div>
+        <div class="t">${left}</div>
+      </div>
+      <div class="count">${prog} / ${ex.sets}<small>${t.setsWord}</small></div>
+      <button class="bigbtn ${tm?'ghost':'acc'}" onclick="toggleTimer('${ex.id}',${ex.sec},${ex.sets})">${tm?t.stop:t.start}</button>`;
+  } else {
+    box.innerHTML = `<div class="exdesc" style="margin-top:0">${t.markDone}</div>`;
+  }
+}
+
+function incRep(id, target){
+  const rec=dayRec(curDay);
+  rec.prog[id]=(rec.prog[id]||0)+1;
+  if(rec.prog[id]>=target && !rec.done[id]){ rec.done[id]=true; beep(); }
+  persist(); renderToday();
+}
+function resetProg(id){
+  const rec=dayRec(curDay); rec.prog[id]=0; delete rec.done[id];
+  persist(); renderToday();
+}
+function toggleDone(id){
+  const rec=dayRec(curDay);
+  if(rec.done[id]) delete rec.done[id]; else rec.done[id]=true;
+  persist(); renderToday();
+}
+function toggleTimer(id, sec, sets){
+  if(timers[id]){ clearInterval(timers[id].iv); delete timers[id]; renderToday(); return; }
+  timers[id]={left:sec, iv:setInterval(()=>{
+    const t=timers[id]; if(!t) return;
+    t.left--;
+    if(t.left<=0){
+      clearInterval(t.iv); delete timers[id];
+      beep();
+      const rec=dayRec(curDay);
+      rec.prog[id]=(rec.prog[id]||0)+1;
+      if(rec.prog[id]>=sets) rec.done[id]=true;
+      persist();
+    }
+    renderToday();
+  },1000)};
+  renderToday();
+}
+function stopAllTimers(){ Object.values(timers).forEach(t=>clearInterval(t.iv)); for(const k in timers) delete timers[k]; }
+
+function setVib(v){
+  const rec=dayRec(curDay);
+  rec.vib = rec.vib===v? null : v;
+  persist(); renderToday();
+}
+function saveNotes(){
+  const rec=dayRec(curDay);
+  rec.notes=document.getElementById('notes').value;
+  persist();
+}
+function shiftDay(d){
+  stopAllTimers();
+  curDay=Math.min(56, Math.max(1, curDay+d));
+  renderToday();
+}
+
+// ---------- rendering: progress ----------
+function renderProgress(){
+  const t=L();
+  const td=todayDayNum();
+  let done=0, vib=0;
+  for(let n=1;n<=56;n++){
+    if(dayComplete(n)) done++;
+    const r=state.days[n];
+    if(r && r.vib==='yes') vib++;
+  }
+  let streak=0;
+  for(let n=Math.min(td,56); n>=1; n--){
+    if(dayComplete(n)) streak++; else if(n<td) break; // today's unfinished day does not break the streak
+  }
+  document.getElementById('stDone').textContent=done;
+  document.getElementById('stVib').textContent=vib;
+  document.getElementById('stStreak').textContent=streak;
+
+  const grid=document.getElementById('grid'); grid.innerHTML='';
+  for(let w=1; w<=8; w++){
+    const row=document.createElement('div'); row.className='weekrow';
+    const lbl=document.createElement('div'); lbl.className='weeklbl';
+    lbl.textContent=`${t.weekShort} ${w}`;
+    row.appendChild(lbl);
+    for(let d=1; d<=7; d++){
+      const n=(w-1)*7+d;
+      const c=document.createElement('button'); c.className='cell'; c.textContent=n;
+      const r=state.days[n];
+      const complete=dayComplete(n);
+      const partial=r && !complete && (Object.keys(r.done).length>0 || r.vib);
+      if(complete) c.classList.add('done');
+      else if(partial) c.classList.add('partial');
+      else if(n<td) c.classList.add('missed');
+      if(n===td) c.classList.add('today');
+      c.title=`${t.dayWord} ${n} · ${fmtDate(dateOfDay(n))}`;
+      c.onclick=()=>{ curDay=n; setView('today'); };
+      row.appendChild(c);
+    }
+    grid.appendChild(row);
+  }
+}
+
+// ---------- views ----------
+function setView(v){
+  stopAllTimers();
+  document.getElementById('viewToday').classList.toggle('hidden', v!=='today');
+  document.getElementById('viewProgress').classList.toggle('hidden', v!=='progress');
+  document.getElementById('tabToday').classList.toggle('active', v==='today');
+  document.getElementById('tabProg').classList.toggle('active', v==='progress');
+  if(v==='today') renderToday(); else renderProgress();
+}
+
+// ---------- init ----------
+(function(){
+  load();
+  applyLang();
+  const inp=document.getElementById('startInput');
+  inp.value=state.start;
+  inp.onchange=()=>{ state.start=inp.value||todayISO(); persist(L().dateSaved); renderToday(); };
+  curDay=Math.min(56, Math.max(1, todayDayNum()));
+  renderToday();
+})();
+</script>
+</body>
+</html>
