@@ -89,8 +89,11 @@ header{display:flex; align-items:center; justify-content:space-between; gap:12px
 .vib.sel-no{background:var(--danger-soft); border-color:var(--danger); color:var(--danger)}
 textarea{width:100%; border:1px solid var(--line-strong); border-radius:var(--radius); padding:10px 12px; font-family:var(--font); font-size:15px; margin-top:12px; resize:vertical; min-height:96px; background:var(--surface); color:var(--text)}
 .savemsg{font-size:13px; color:var(--success); font-weight:500; margin-top:8px; min-height:18px}
-.rec{margin-top:16px; padding-top:16px; border-top:1px solid var(--line)}
-.rec h4{font-weight:600; font-size:15px; margin-bottom:8px}
+.rec, .read{margin-top:16px; padding-top:16px; border-top:1px solid var(--line)}
+.rec h4, .read h4{font-weight:600; font-size:15px; margin-bottom:8px}
+.words{display:flex; flex-wrap:wrap; gap:8px}
+.word{display:inline-block; padding:6px 10px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--sunken); font-size:16px; color:var(--text)}
+.word b{font-weight:700}
 .recrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
 .recrow audio{max-width:100%; height:40px}
 .recdot{width:10px; height:10px; border-radius:999px; background:var(--danger); flex:none; animation:pulse 1.2s var(--ease) infinite}
@@ -181,6 +184,10 @@ textarea{width:100%; border:1px solid var(--line-strong); border-radius:var(--ra
       </div>
       <textarea id="notes" placeholder="Нотатки…" onblur="saveNotes()"></textarea>
       <div class="savemsg" id="saveMsg"></div>
+      <div class="read">
+        <h4 id="readTitle">Прочитай уголос</h4>
+        <div id="readBox" class="words"></div>
+      </div>
       <div class="rec">
         <h4 id="recTitle">Запис голосу</h4>
         <div id="recBox"></div>
@@ -227,6 +234,8 @@ const I18N = {
     notesPlaceholder:'Нотатки: що вдалося, що ні, скільки хвилин…',
     saved:'Збережено', saveErr:'Не вдалося зберегти — спробуйте ще раз', dateSaved:'Дату збережено',
     exportBtn:'Експорт', importBtn:'Імпорт', imported:'Прогрес завантажено', importErr:'Не вдалося прочитати файл',
+    readTitle:'Прочитай уголос',
+    readWords:['рак','риба','рука','робота','ракета','райдуга','рама','ручка','ромашка','рушник','гора','перо','море','буря','комора','сокира','дорога','корова','буряк','паркан','трава','дракон','крапля','брат','круг','грім','страва','крокодил','брама','друг'],
     recTitle:'Запис голосу', recStart:'Записати', recStop:'Стоп', recAgain:'Ще раз', recDownload:'Завантажити', recDelete:'Видалити',
     recHint:'Останній запис зберігається для цього дня на цьому пристрої. Завантажте файл, щоб надіслати логопеду.', micDenied:'Немає доступу до мікрофона.',
     markDone:'Позначте галочкою, коли виконано.', checkAria:'Позначити виконаним',
@@ -277,6 +286,8 @@ const I18N = {
     notesPlaceholder:'Poznámky: čo sa podarilo, čo nie, koľko minút…',
     saved:'Uložené', saveErr:'Nepodarilo sa uložiť — skúste znova', dateSaved:'Dátum uložený',
     exportBtn:'Export', importBtn:'Import', imported:'Pokrok načítaný', importErr:'Súbor sa nepodarilo načítať',
+    readTitle:'Prečítaj nahlas',
+    readWords:['ruka','ryba','rok','ráno','ruža','rada','robot','rukavica','radosť','ropucha','hora','pero','more','dvere','komora','sekera','koryto','krava','kravata','obruba','tráva','drak','brat','hrad','prút','strom','chrobák','brána','priateľ','trúba'],
     recTitle:'Nahrávka hlasu', recStart:'Nahrať', recStop:'Stop', recAgain:'Znova', recDownload:'Stiahnuť', recDelete:'Zmazať',
     recHint:'Posledná nahrávka sa uloží pre tento deň v tomto zariadení. Stiahnite súbor, ak ho chcete poslať logopédovi.', micDenied:'Niet prístupu k mikrofónu.',
     markDone:'Označte fajkou, keď je hotové.', checkAria:'Označiť ako hotové',
@@ -327,6 +338,8 @@ const I18N = {
     notesPlaceholder:'Notes: what worked, what didn’t, how many minutes…',
     saved:'Saved', saveErr:'Could not save — please try again', dateSaved:'Date saved',
     exportBtn:'Export', importBtn:'Import', imported:'Progress loaded', importErr:'Could not read the file',
+    readTitle:'Read aloud',
+    readWords:['red','rabbit','river','road','rocket','rainbow','ring','robot','rose','rope','carry','arrow','around','berry','sorry','mirror','forest','orange','parrot','cherry','tree','dream','cross','brave','grass','print','train','bridge','drum','friend'],
     recTitle:'Voice recording', recStart:'Record', recStop:'Stop', recAgain:'Again', recDownload:'Download', recDelete:'Delete',
     recHint:'The latest take is saved for this day on this device. Download the file to send it to a therapist.', micDenied:'No microphone access.',
     markDone:'Tick the box when done.', checkAria:'Mark as done',
@@ -461,6 +474,7 @@ function applyLang(){
   document.getElementById('notes').setAttribute('placeholder',t.notesPlaceholder);
   document.getElementById('exportBtn').textContent=t.exportBtn;
   document.getElementById('importBtn').textContent=t.importBtn;
+  document.getElementById('readTitle').textContent=t.readTitle;
   document.getElementById('recTitle').textContent=t.recTitle;
   document.getElementById('recHint').textContent=t.recHint;
   renderRec();
@@ -532,11 +546,20 @@ function renderToday(){
     renderCtrl(ex, rec);
   });
 
-  // vib + notes
+  // read-aloud words + vib + notes
+  renderRead();
   document.querySelectorAll('#vibOpts .vib').forEach(btn=>{
     btn.className='vib'+(rec.vib===btn.dataset.v?' sel-'+rec.vib:'');
   });
   document.getElementById('notes').value = rec.notes||'';
+}
+
+// rotating set of R-words to read aloud (varies by day, target letter bolded)
+function renderRead(){
+  const box=document.getElementById('readBox'); if(!box) return;
+  const words=L().readWords, n=words.length, per=8, start=((curDay-1)*per)%n;
+  const pick=[]; for(let i=0;i<per;i++) pick.push(words[(start+i)%n]);
+  box.innerHTML=pick.map(w=>`<span class="word">${w.replace(/([рРrR])/g,'<b>$1</b>')}</span>`).join('');
 }
 
 function renderCtrl(ex, rec){
