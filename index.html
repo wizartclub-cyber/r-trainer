@@ -3,122 +3,128 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#C2334D">
+<meta name="theme-color" content="#f5f5f7">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Тренажер «Р»</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap&subset=cyrillic,latin,latin-ext" rel="stylesheet">
 <style>
 :root{
-  --bg:#F2F5F4; --card:#FFFFFF; --ink:#16302B; --muted:#5E7470;
-  --accent:#C2334D; --accent-soft:#F9E3E8;
-  --green:#3E7C6F; --green-soft:#E2EFEA;
-  --amber:#B97E10; --amber-soft:#FAF0DA;
-  --line:#DCE4E1;
-  --disp:'Unbounded', system-ui, sans-serif;
-  --body:'IBM Plex Sans', system-ui, sans-serif;
+  --bg:#f5f5f7; --surface:#ffffff; --sunken:#fafafa;
+  --text:#1d1d1f; --text-secondary:#6e6e73; --text-tertiary:#86868b;
+  --line:rgba(0,0,0,0.10); --line-strong:rgba(0,0,0,0.18);
+  --accent:#0071e3; --accent-text:#006ada; --accent-hover:#0077ed; --accent-soft:rgba(0,113,227,0.08);
+  --success:#12805c; --success-soft:rgba(18,128,92,0.10);
+  --warning:#8a5a00; --warning-soft:rgba(138,90,0,0.10);
+  --danger:#b3261e; --danger-soft:rgba(179,38,30,0.10);
+  --focus-ring:0 0 0 4px rgba(0,113,227,0.25);
+  --radius-sm:6px; --radius:8px; --radius-lg:12px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.04); --shadow:0 2px 8px rgba(0,0,0,0.06); --shadow-lg:0 12px 32px rgba(0,0,0,0.12);
+  --ease:cubic-bezier(0.4,0,0.2,1); --dur-fast:120ms; --dur:200ms; --dur-slow:320ms;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,sans-serif;
 }
+@media (prefers-reduced-motion: reduce){:root{--dur-fast:0ms; --dur:0ms; --dur-slow:0ms}}
 *{box-sizing:border-box; margin:0}
-body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.45; padding:16px 12px 60px}
-.wrap{max-width:620px; margin:0 auto}
+body{background:var(--bg); color:var(--text); font-family:var(--font); font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; padding:16px 12px 56px}
+.wrap{max-width:600px; margin:0 auto}
+:where(a,button,input,select,textarea):focus-visible{outline:none; box-shadow:var(--focus-ring)}
+.ic{width:18px; height:18px; flex:none; display:inline-block; vertical-align:middle}
 
 /* header */
-header{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap}
-.logo{font-family:var(--disp); font-weight:700; font-size:20px; letter-spacing:.5px}
-.logo .r{color:var(--accent)}
+header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; flex-wrap:wrap}
+.logo{font-weight:600; font-size:20px; letter-spacing:-0.01em; color:var(--text)}
 .headright{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end}
-.langsel{border:1px solid var(--line); background:var(--card); color:var(--muted); border-radius:20px; padding:7px 10px; font-family:var(--body); font-weight:600; font-size:13px; cursor:pointer}
-.tabs{display:flex; gap:6px}
-.tab{border:1px solid var(--line); background:var(--card); color:var(--muted); border-radius:20px; padding:7px 14px; font-family:var(--body); font-weight:600; font-size:14px; cursor:pointer}
-.tab.active{background:var(--ink); color:#fff; border-color:var(--ink)}
-.tab:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.langsel{height:36px; border:1px solid var(--line-strong); background:var(--surface); color:var(--text); border-radius:var(--radius); padding:0 10px; font-family:var(--font); font-weight:500; font-size:13px; cursor:pointer}
+.tabs{display:flex; gap:4px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:2px}
+.tab{border:none; background:none; color:var(--text-secondary); border-radius:var(--radius-sm); padding:0 12px; height:32px; font-family:var(--font); font-weight:500; font-size:14px; cursor:pointer; transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)}
+.tab.active{background:var(--accent-soft); color:var(--accent-text)}
+
+/* buttons */
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:40px; padding:0 16px; border-radius:var(--radius); border:1px solid transparent; background:none; font-family:var(--font); font-weight:500; font-size:15px; line-height:1; color:var(--text); cursor:pointer; text-decoration:none; transition:background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease)}
+.btn:disabled{opacity:.4; cursor:not-allowed}
+.btn.secondary{background:var(--surface); border-color:var(--line-strong); color:var(--text)}
+.btn.secondary:hover:not(:disabled){background:var(--accent-soft)}
+.btn.ghost{color:var(--accent-text)}
+.btn.ghost:hover:not(:disabled){background:var(--accent-soft)}
+.btn.danger{background:var(--surface); border-color:var(--danger); color:var(--danger)}
+.btn.danger:hover:not(:disabled){background:var(--danger-soft)}
+.btn .ic{width:18px; height:18px}
 
 /* day nav */
-.daynav{display:flex; align-items:center; justify-content:space-between; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:10px 12px; margin-bottom:12px}
-.daynav button{background:none; border:1px solid var(--line); border-radius:10px; width:38px; height:38px; font-size:18px; cursor:pointer; color:var(--ink)}
-.daynav button:disabled{opacity:.3; cursor:default}
+.daynav{display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:12px; margin-bottom:12px}
+.navbtn{display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:var(--surface); border:1px solid var(--line-strong); border-radius:var(--radius); color:var(--text); cursor:pointer; transition:background var(--dur-fast) var(--ease)}
+.navbtn:hover:not(:disabled){background:var(--accent-soft)}
+.navbtn:disabled{opacity:.4; cursor:not-allowed}
 .daymeta{text-align:center}
-.daymeta .dn{font-family:var(--disp); font-weight:700; font-size:17px}
-.daymeta .dd{font-size:13px; color:var(--muted)}
-.phasebadge{display:inline-block; font-size:12px; font-weight:600; border-radius:12px; padding:2px 10px; margin-top:3px}
-.ph1{background:var(--amber-soft); color:var(--amber)}
-.ph2{background:var(--accent-soft); color:var(--accent)}
-.ph3{background:var(--green-soft); color:var(--green)}
+.daymeta .dn{font-weight:600; font-size:17px; letter-spacing:-0.01em}
+.daymeta .dd{font-size:13px; color:var(--text-secondary); margin-top:2px}
+.phasebadge{display:inline-block; height:22px; line-height:20px; font-size:12px; font-weight:500; border-radius:var(--radius-sm); padding:0 8px; margin-top:6px; background:rgba(0,0,0,0.05); color:var(--text-secondary)}
 
 /* exercise cards */
-.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px}
-.card.done{border-color:var(--green); background:var(--green-soft)}
-.exhead{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
-.exname{font-weight:600; font-size:16.5px}
-.exdesc{color:var(--muted); font-size:14px; margin-top:4px}
-.exdose{font-size:13px; font-weight:600; color:var(--accent); margin-top:4px}
-.card.done .exdose{color:var(--green)}
-.checkbtn{flex:none; width:30px; height:30px; border-radius:50%; border:2px solid var(--line); background:#fff; cursor:pointer; font-size:15px; color:transparent; line-height:1}
-.card.done .checkbtn{background:var(--green); border-color:var(--green); color:#fff}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:16px; margin-bottom:12px}
+.card.done{border-color:var(--success)}
+.exhead{display:flex; align-items:flex-start; justify-content:space-between; gap:12px}
+.exname{font-weight:600; font-size:17px}
+.exdesc{color:var(--text-secondary); font-size:13px; margin-top:4px; line-height:1.45}
+.exdose{font-size:13px; font-weight:500; color:var(--text-secondary); margin-top:8px; font-variant-numeric:tabular-nums}
+.checkbtn{flex:none; display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:var(--radius); border:1px solid var(--line-strong); background:var(--surface); cursor:pointer; color:transparent; transition:background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease)}
+.card.done .checkbtn{background:var(--success); border-color:var(--success); color:#fff}
 
 /* controls */
-.ctrl{display:flex; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap}
-.bigbtn{font-family:var(--body); font-weight:600; font-size:15px; border:none; border-radius:12px; padding:11px 18px; cursor:pointer}
-.bigbtn.acc{background:var(--accent); color:#fff}
-.bigbtn.ghost{background:none; border:1px solid var(--line); color:var(--ink)}
-.count{font-family:var(--disp); font-weight:700; font-size:22px; min-width:74px; text-align:center}
-.count small{font-size:12px; color:var(--muted); font-family:var(--body); font-weight:500; display:block}
+.ctrl{display:flex; align-items:center; gap:12px; margin-top:16px; flex-wrap:wrap}
+.count{font-weight:600; font-size:20px; min-width:72px; text-align:center; font-variant-numeric:tabular-nums; color:var(--text)}
+.count small{font-size:12px; color:var(--text-secondary); font-weight:400; display:block; font-variant-numeric:normal}
 
-/* timer ring — signature element */
+/* timer ring */
 .ring{position:relative; width:96px; height:96px; flex:none}
 .ring svg{transform:rotate(-90deg)}
-.ring .t{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--disp); font-weight:700; font-size:22px}
-.ripple{position:absolute; inset:0; border-radius:50%; border:2px solid var(--accent); opacity:0; pointer-events:none}
-.running .ripple{animation:rip 1.2s ease-out infinite}
-.running .ripple.r2{animation-delay:.6s}
-@keyframes rip{0%{transform:scale(.85); opacity:.55}100%{transform:scale(1.28); opacity:0}}
-@media (prefers-reduced-motion: reduce){.ripple, .recdot{animation:none !important}}
+.ring .t{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:20px; font-variant-numeric:tabular-nums}
 
 /* session log */
-.log h3{font-family:var(--disp); font-weight:700; font-size:15px; margin-bottom:10px}
+.log h3{font-weight:600; font-size:17px; margin-bottom:12px}
+.qlabel{font-size:13px; color:var(--text-secondary); margin-bottom:8px}
 .viboptions{display:flex; gap:8px; flex-wrap:wrap}
-.vib{border:1px solid var(--line); background:#fff; border-radius:20px; padding:8px 16px; font-weight:600; font-size:14px; cursor:pointer; color:var(--muted)}
-.vib.sel-yes{background:var(--green); border-color:var(--green); color:#fff}
-.vib.sel-partial{background:var(--amber); border-color:var(--amber); color:#fff}
-.vib.sel-no{background:var(--ink); border-color:var(--ink); color:#fff}
-textarea{width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-family:var(--body); font-size:15px; margin-top:10px; resize:vertical; min-height:64px; background:#fff; color:var(--ink)}
-.savemsg{font-size:13px; color:var(--green); font-weight:600; margin-top:8px; min-height:18px}
-.rec{margin-top:16px; padding-top:14px; border-top:1px solid var(--line)}
-.rec h4{font-family:var(--disp); font-weight:700; font-size:14px; margin-bottom:8px}
-.recrow{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
-.recrow audio{max-width:100%; height:38px}
-.recdot{width:12px; height:12px; border-radius:50%; background:var(--accent); flex:none; animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
-a.bigbtn{text-decoration:none; display:inline-block}
+.vib{height:40px; padding:0 16px; border:1px solid var(--line-strong); background:var(--surface); border-radius:var(--radius); font-weight:500; font-size:14px; cursor:pointer; color:var(--text-secondary); transition:background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease)}
+.vib.sel-yes{background:var(--success-soft); border-color:var(--success); color:var(--success)}
+.vib.sel-partial{background:var(--warning-soft); border-color:var(--warning); color:var(--warning)}
+.vib.sel-no{background:var(--danger-soft); border-color:var(--danger); color:var(--danger)}
+textarea{width:100%; border:1px solid var(--line-strong); border-radius:var(--radius); padding:10px 12px; font-family:var(--font); font-size:15px; margin-top:12px; resize:vertical; min-height:96px; background:var(--surface); color:var(--text)}
+.savemsg{font-size:13px; color:var(--success); font-weight:500; margin-top:8px; min-height:18px}
+.rec{margin-top:16px; padding-top:16px; border-top:1px solid var(--line)}
+.rec h4{font-weight:600; font-size:15px; margin-bottom:8px}
+.recrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.recrow audio{max-width:100%; height:40px}
+.recdot{width:10px; height:10px; border-radius:999px; background:var(--danger); flex:none; animation:pulse 1.2s var(--ease) infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media (prefers-reduced-motion: reduce){.recdot{animation:none}}
 
 /* progress */
-.stats{display:flex; gap:10px; margin-bottom:12px}
-.stat{flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px; text-align:center}
-.stat .num{font-family:var(--disp); font-weight:700; font-size:26px}
-.stat.acc .num{color:var(--accent)}
-.stat.grn .num{color:var(--green)}
-.stat .lbl{font-size:12.5px; color:var(--muted); margin-top:2px}
-.gridwrap{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px}
+.stats{display:flex; gap:12px; margin-bottom:12px}
+.stat{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:16px 12px; text-align:center}
+.stat .num{font-weight:600; font-size:28px; color:var(--text); font-variant-numeric:tabular-nums; letter-spacing:-0.01em}
+.stat .lbl{font-size:12px; color:var(--text-secondary); margin-top:4px}
+.gridwrap{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:16px}
 .weekrow{display:flex; align-items:center; gap:6px; margin-bottom:6px}
-.weeklbl{width:64px; font-size:12px; color:var(--muted); font-weight:600; flex:none}
-.cell{flex:1; aspect-ratio:1; max-width:52px; border-radius:9px; border:1px solid var(--line); background:#fff; cursor:pointer; position:relative; font-size:11px; color:var(--muted); font-family:var(--body); padding:0}
-.cell.done{background:var(--green); border-color:var(--green); color:#fff; font-weight:600}
-.cell.partial{background:var(--amber); border-color:var(--amber); color:#fff; font-weight:600}
-.cell.missed{background:var(--accent-soft); border-color:var(--accent-soft); color:var(--accent)}
-.cell.today{outline:2px solid var(--ink); outline-offset:1px}
-.cell .mic{position:absolute; top:1px; right:2px; font-size:9px; line-height:1}
-.legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:12.5px; color:var(--muted)}
-.dot{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px}
+.weeklbl{width:52px; font-size:12px; color:var(--text-secondary); font-weight:500; flex:none}
+.cell{flex:1; aspect-ratio:1; max-width:48px; border-radius:var(--radius-sm); border:1px solid var(--line); background:var(--surface); cursor:pointer; position:relative; font-size:12px; color:var(--text-secondary); font-family:var(--font); font-variant-numeric:tabular-nums; padding:0; transition:background var(--dur-fast) var(--ease)}
+.cell:hover{background:var(--accent-soft)}
+.cell.done{background:var(--success-soft); border-color:var(--success-soft); color:var(--success); font-weight:600}
+.cell.partial{background:var(--warning-soft); border-color:var(--warning-soft); color:var(--warning); font-weight:600}
+.cell.missed{background:var(--danger-soft); border-color:var(--danger-soft); color:var(--danger)}
+.cell.today{outline:2px solid var(--accent); outline-offset:1px}
+.cell .mic{position:absolute; top:1px; right:1px; width:11px; height:11px; line-height:0}
+.cell .mic .ic{width:11px; height:11px}
+.legend{display:flex; gap:12px 16px; flex-wrap:wrap; margin-top:16px; font-size:12px; color:var(--text-secondary)}
+.legend .ic{width:12px; height:12px}
+.dot{display:inline-block; width:10px; height:10px; border-radius:999px; margin-right:6px; vertical-align:-1px}
 
 /* settings */
-.settings{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:12px}
-.settings label{font-weight:600; font-size:14px}
-.settings input[type=date]{border:1px solid var(--line); border-radius:10px; padding:8px 10px; font-family:var(--body); font-size:15px; margin-left:8px; background:#fff; color:var(--ink)}
-.hint{font-size:13px; color:var(--muted); margin-top:8px}
-.io{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
-.io .bigbtn{font-size:14px; padding:9px 14px}
-.warn{background:var(--accent-soft); border:1px solid #EFC4CE; color:var(--accent); border-radius:12px; padding:10px 14px; font-size:14px; margin-bottom:10px}
+.settings{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:16px; margin-bottom:12px}
+.settings label{display:block}
+#startLabelText{display:block; font-weight:500; font-size:12px; color:var(--text-secondary); margin-bottom:6px}
+.settings input[type=date]{display:block; height:40px; border:1px solid var(--line-strong); border-radius:var(--radius); padding:0 12px; font-family:var(--font); font-size:15px; background:var(--surface); color:var(--text)}
+.hint{font-size:12px; color:var(--text-secondary); margin-top:8px; line-height:1.45}
+.io{display:flex; gap:8px; margin-top:16px; flex-wrap:wrap}
+.warn{display:flex; gap:8px; background:var(--warning-soft); border:1px solid var(--warning); color:var(--warning); border-radius:var(--radius); padding:12px 14px; font-size:13px; margin-bottom:12px; line-height:1.45}
 .hidden{display:none}
 </style>
 </head>
@@ -128,9 +134,9 @@ a.bigbtn{text-decoration:none; display:inline-block}
     <div class="logo" id="logo"></div>
     <div class="headright">
       <select class="langsel" id="langSel" onchange="setLang(this.value)" aria-label="Мова / Jazyk / Language">
-        <option value="uk">🇺🇦 Українська</option>
-        <option value="sk">🇸🇰 Slovenčina</option>
-        <option value="en">🇬🇧 English</option>
+        <option value="uk">Українська</option>
+        <option value="sk">Slovenčina</option>
+        <option value="en">English</option>
       </select>
       <div class="tabs">
         <button class="tab active" id="tabToday" onclick="setView('today')">Сьогодні</button>
@@ -144,21 +150,21 @@ a.bigbtn{text-decoration:none; display:inline-block}
       <label><span id="startLabelText">Дата початку курсу:</span> <input type="date" id="startInput"></label>
       <div class="hint" id="startHint">Курс триває 56 днів (8 тижнів). Дату можна змінити будь-коли.</div>
       <div class="io">
-        <button class="bigbtn ghost" id="exportBtn" onclick="exportData()">Експорт</button>
-        <label class="bigbtn ghost" style="cursor:pointer"><span id="importBtn">Імпорт</span>
+        <button class="btn secondary" id="exportBtn" onclick="exportData()">Експорт</button>
+        <label class="btn secondary" style="cursor:pointer"><span id="importBtn">Імпорт</span>
           <input type="file" accept="application/json,.json" onchange="importData(this)" hidden>
         </label>
       </div>
     </div>
 
     <div class="daynav">
-      <button id="prevDay" aria-label="Попередній день" onclick="shiftDay(-1)">‹</button>
+      <button class="navbtn" id="prevDay" aria-label="Попередній день" onclick="shiftDay(-1)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
       <div class="daymeta">
         <div class="dn" id="dayTitle">День 1</div>
         <div class="dd" id="dayDate"></div>
         <span class="phasebadge" id="phaseBadge"></span>
       </div>
-      <button id="nextDay" aria-label="Наступний день" onclick="shiftDay(1)">›</button>
+      <button class="navbtn" id="nextDay" aria-label="Наступний день" onclick="shiftDay(1)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
     </div>
 
     <div id="vibWarn" class="warn hidden"></div>
@@ -167,7 +173,7 @@ a.bigbtn{text-decoration:none; display:inline-block}
 
     <div class="card log">
       <h3 id="summaryTitle">Підсумок дня</h3>
-      <div style="font-size:14px; color:var(--muted); margin-bottom:8px" id="vibQuestion">Чи виходила вібрація кінчика язика?</div>
+      <div class="qlabel" id="vibQuestion">Чи виходила вібрація кінчика язика?</div>
       <div class="viboptions" id="vibOpts">
         <button class="vib" data-v="yes" onclick="setVib('yes')">Так</button>
         <button class="vib" data-v="partial" onclick="setVib('partial')">Частково</button>
@@ -179,24 +185,24 @@ a.bigbtn{text-decoration:none; display:inline-block}
         <h4 id="recTitle">Запис голосу</h4>
         <div id="recBox"></div>
         <div class="hint" id="recHint"></div>
-        <div class="savemsg" id="recStatus" style="color:var(--accent)"></div>
+        <div class="savemsg" id="recStatus" style="color:var(--danger)"></div>
       </div>
     </div>
   </div>
 
   <div id="viewProgress" class="hidden">
     <div class="stats">
-      <div class="stat grn"><div class="num" id="stDone">0</div><div class="lbl" id="stDoneLbl">днів виконано</div></div>
-      <div class="stat acc"><div class="num" id="stVib">0</div><div class="lbl" id="stVibLbl">днів з вібрацією</div></div>
+      <div class="stat"><div class="num" id="stDone">0</div><div class="lbl" id="stDoneLbl">днів виконано</div></div>
+      <div class="stat"><div class="num" id="stVib">0</div><div class="lbl" id="stVibLbl">днів з вібрацією</div></div>
       <div class="stat"><div class="num" id="stStreak">0</div><div class="lbl" id="stStreakLbl">поспіль зараз</div></div>
     </div>
     <div class="gridwrap" id="grid"></div>
     <div class="legend">
-      <span><span class="dot" style="background:var(--green)"></span><span id="legDone"></span></span>
-      <span><span class="dot" style="background:var(--amber)"></span><span id="legPartial"></span></span>
-      <span><span class="dot" style="background:var(--accent-soft)"></span><span id="legMissed"></span></span>
-      <span><span class="dot" style="background:#fff; border:1px solid var(--line)"></span><span id="legAhead"></span></span>
-      <span>🎙 <span id="legRec"></span></span>
+      <span><span class="dot" style="background:var(--success)"></span><span id="legDone"></span></span>
+      <span><span class="dot" style="background:var(--warning)"></span><span id="legPartial"></span></span>
+      <span><span class="dot" style="background:var(--danger)"></span><span id="legMissed"></span></span>
+      <span><span class="dot" style="background:var(--surface); border:1px solid var(--line-strong)"></span><span id="legAhead"></span></span>
+      <span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg> <span id="legRec"></span></span>
     </div>
     <div class="hint" id="gridHint" style="margin-top:10px"></div>
   </div>
@@ -221,7 +227,7 @@ const I18N = {
     notesPlaceholder:'Нотатки: що вдалося, що ні, скільки хвилин…',
     saved:'Збережено', saveErr:'Не вдалося зберегти — спробуйте ще раз', dateSaved:'Дату збережено',
     exportBtn:'Експорт', importBtn:'Імпорт', imported:'Прогрес завантажено', importErr:'Не вдалося прочитати файл',
-    recTitle:'Запис голосу', recStart:'🎙 Записати', recStop:'⏹ Стоп', recAgain:'🎙 Ще раз', recDownload:'⬇ Завантажити', recDelete:'🗑 Видалити',
+    recTitle:'Запис голосу', recStart:'Записати', recStop:'Стоп', recAgain:'Ще раз', recDownload:'Завантажити', recDelete:'Видалити',
     recHint:'Останній запис зберігається для цього дня на цьому пристрої. Завантажте файл, щоб надіслати логопеду.', micDenied:'Немає доступу до мікрофона.',
     markDone:'Позначте галочкою, коли виконано.', checkAria:'Позначити виконаним',
     plus1:'+1', reset:'Скинути', start:'Старт', stop:'Стоп', setsWord:'підходів',
@@ -271,7 +277,7 @@ const I18N = {
     notesPlaceholder:'Poznámky: čo sa podarilo, čo nie, koľko minút…',
     saved:'Uložené', saveErr:'Nepodarilo sa uložiť — skúste znova', dateSaved:'Dátum uložený',
     exportBtn:'Export', importBtn:'Import', imported:'Pokrok načítaný', importErr:'Súbor sa nepodarilo načítať',
-    recTitle:'Nahrávka hlasu', recStart:'🎙 Nahrať', recStop:'⏹ Stop', recAgain:'🎙 Znova', recDownload:'⬇ Stiahnuť', recDelete:'🗑 Zmazať',
+    recTitle:'Nahrávka hlasu', recStart:'Nahrať', recStop:'Stop', recAgain:'Znova', recDownload:'Stiahnuť', recDelete:'Zmazať',
     recHint:'Posledná nahrávka sa uloží pre tento deň v tomto zariadení. Stiahnite súbor, ak ho chcete poslať logopédovi.', micDenied:'Niet prístupu k mikrofónu.',
     markDone:'Označte fajkou, keď je hotové.', checkAria:'Označiť ako hotové',
     plus1:'+1', reset:'Vynulovať', start:'Štart', stop:'Stop', setsWord:'sérií',
@@ -321,7 +327,7 @@ const I18N = {
     notesPlaceholder:'Notes: what worked, what didn’t, how many minutes…',
     saved:'Saved', saveErr:'Could not save — please try again', dateSaved:'Date saved',
     exportBtn:'Export', importBtn:'Import', imported:'Progress loaded', importErr:'Could not read the file',
-    recTitle:'Voice recording', recStart:'🎙 Record', recStop:'⏹ Stop', recAgain:'🎙 Again', recDownload:'⬇ Download', recDelete:'🗑 Delete',
+    recTitle:'Voice recording', recStart:'Record', recStop:'Stop', recAgain:'Again', recDownload:'Download', recDelete:'Delete',
     recHint:'The latest take is saved for this day on this device. Download the file to send it to a therapist.', micDenied:'No microphone access.',
     markDone:'Tick the box when done.', checkAria:'Mark as done',
     plus1:'+1', reset:'Reset', start:'Start', stop:'Stop', setsWord:'sets',
@@ -358,6 +364,17 @@ const I18N = {
   }
 };
 function L(){ return I18N[state.lang] || I18N.uk; }
+
+// Lucide icons (stroke 1.5) — design system forbids emoji as UI icons.
+const svgIc=p=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const IC={
+  mic: svgIc('<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>'),
+  stop: svgIc('<rect x="6" y="6" width="12" height="12" rx="2"/>'),
+  play: svgIc('<polygon points="6 3 20 12 6 21 6 3"/>'),
+  trash: svgIc('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/>'),
+  download: svgIc('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'),
+  check: svgIc('<path d="M20 6 9 17l-5-5"/>')
+};
 
 function phaseOfWeek(w){ return w<=2?1 : w<=4?2 : 3; }
 function exercisesFor(week){
@@ -508,7 +525,7 @@ function renderToday(){
           <div class="exdesc">${ex.desc}</div>
           ${dose?`<div class="exdose">${dose}</div>`:''}
         </div>
-        <button class="checkbtn" aria-label="${t.checkAria}" onclick="toggleDone('${ex.id}')">✓</button>
+        <button class="checkbtn" aria-label="${t.checkAria}" onclick="toggleDone('${ex.id}')">${IC.check}</button>
       </div>
       <div class="ctrl" id="ctrl-${ex.id}"></div>`;
     list.appendChild(card);
@@ -529,26 +546,25 @@ function renderCtrl(ex, rec){
   const prog = rec.prog[ex.id]||0;
   if(ex.type==='reps'){
     box.innerHTML = `
-      <button class="bigbtn acc" onclick="incRep('${ex.id}',${ex.target})">${t.plus1}</button>
+      <button class="btn secondary" onclick="incRep('${ex.id}',${ex.target})">${t.plus1}</button>
       <div class="count">${prog} / ${ex.target}<small>${ex.unit}</small></div>
-      <button class="bigbtn ghost" onclick="resetProg('${ex.id}')">${t.reset}</button>`;
+      <button class="btn ghost" onclick="resetProg('${ex.id}')">${t.reset}</button>`;
   } else if(ex.type==='timer'){
     const tm = timers[ex.id];
     const left = tm? tm.left : ex.sec;
     const frac = 1 - left/ex.sec;
     const C = 2*Math.PI*42;
     box.innerHTML = `
-      <div class="ring ${tm?'running':''}" id="ring-${ex.id}">
+      <div class="ring" id="ring-${ex.id}">
         <svg width="96" height="96" viewBox="0 0 96 96">
           <circle cx="48" cy="48" r="42" fill="none" stroke="var(--line)" stroke-width="6"/>
           <circle cx="48" cy="48" r="42" fill="none" stroke="var(--accent)" stroke-width="6"
             stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-frac)}"/>
         </svg>
-        <div class="ripple"></div><div class="ripple r2"></div>
         <div class="t">${left}</div>
       </div>
       <div class="count">${prog} / ${ex.sets}<small>${t.setsWord}</small></div>
-      <button class="bigbtn ${tm?'ghost':'acc'}" onclick="toggleTimer('${ex.id}',${ex.sec},${ex.sets})">${tm?t.stop:t.start}</button>`;
+      <button class="btn secondary" onclick="toggleTimer('${ex.id}',${ex.sec},${ex.sets})">${tm?IC.stop:IC.play}${tm?t.stop:t.start}</button>`;
   } else {
     box.innerHTML = `<div class="exdesc" style="margin-top:0">${t.markDone}</div>`;
   }
@@ -653,7 +669,7 @@ async function markRecDays(){
   document.querySelectorAll('#grid .cell').forEach(c=>{
     const has=set.has(Number(c.dataset.day));
     const mark=c.querySelector('.mic');
-    if(has && !mark){ const m=document.createElement('span'); m.className='mic'; m.textContent='🎙'; c.appendChild(m); }
+    if(has && !mark){ const m=document.createElement('span'); m.className='mic'; m.innerHTML=IC.mic; c.appendChild(m); }
     else if(!has && mark){ mark.remove(); }
   });
 }
@@ -736,15 +752,15 @@ function renderRec(){
   if(rec.mr && rec.mr.state==='recording'){
     box.innerHTML=`<div class="recrow"><span class="recdot"></span>
       <span class="count rectime" style="min-width:auto">${rec.secs}s</span>
-      <button class="bigbtn acc" onclick="toggleRec()">${t.recStop}</button></div>`;
+      <button class="btn secondary" onclick="toggleRec()">${IC.stop}${t.recStop}</button></div>`;
   } else if(rec.url){
     box.innerHTML=`<div class="recrow">
       <audio controls src="${rec.url}"></audio>
-      <a class="bigbtn ghost" href="${rec.url}" download="r-day${curDay}.${recExt(rec.blob)}">${t.recDownload}</a>
-      <button class="bigbtn ghost" onclick="toggleRec()">${t.recAgain}</button>
-      <button class="bigbtn ghost" onclick="deleteRec()">${t.recDelete}</button></div>`;
+      <a class="btn secondary" href="${rec.url}" download="r-day${curDay}.${recExt(rec.blob)}">${IC.download}${t.recDownload}</a>
+      <button class="btn secondary" onclick="toggleRec()">${IC.mic}${t.recAgain}</button>
+      <button class="btn danger" onclick="deleteRec()">${IC.trash}${t.recDelete}</button></div>`;
   } else {
-    box.innerHTML=`<div class="recrow"><button class="bigbtn acc" onclick="toggleRec()">${t.recStart}</button></div>`;
+    box.innerHTML=`<div class="recrow"><button class="btn secondary" onclick="toggleRec()">${IC.mic}${t.recStart}</button></div>`;
   }
 }
 
